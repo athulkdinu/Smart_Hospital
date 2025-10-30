@@ -1,19 +1,17 @@
-import react from 'react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCoffee } from '@fortawesome/free-solid-svg-icons';
-
-
+import React from 'react'
+import { Routes, Route, Navigate } from 'react-router-dom'
+import Dashboard from './pages/Dashboard'
+import Profile from './pages/Profile'
+import Appointments from './pages/Appointments'
 
 function App() {
-
   return (
-    <>
-<h1 className="text-3xl font-bold text-center text-red-700 mt-5">
-  Hello
-</h1>
-
-        <FontAwesomeIcon icon={faCoffee} size="2x" />
-    </>
+    <Routes>
+      <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/profile" element={<Profile />} />
+      <Route path="/appointments" element={<Appointments />} />
+      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+    </Routes>
   )
 }
 
