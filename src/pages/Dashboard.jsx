@@ -134,9 +134,9 @@ function Dashboard() {
           <div className="rounded-xl bg-white p-5 border border-slate-200 shadow-sm">
             <h3 className="text-base font-semibold text-slate-800">Helpful Links</h3>
             <ul className="mt-3 space-y-2 text-sm text-slate-600 list-disc list-inside">
-              <li>COVID-19 Guidelines and Vaccination</li>
-              <li>Diet and Nutrition Plans</li>
-              <li>Mental Wellness Resources</li>
+              <li>Nutrition & Diet Plans</li>
+              <li>Mental Health Support</li>
+              <li>Fitness & Lifestyle Tips</li>
             </ul>
           </div>
         </section>
@@ -148,8 +148,9 @@ function Dashboard() {
               Announcements
             </h3>
             <ul className="mt-3 space-y-2 text-sm text-slate-600 list-disc list-inside">
-              <li>Seasonal flu vaccines available this month.</li>
-              <li>Cardiology department extended hours on weekends.</li>
+              <li>Free health check-up camp scheduled for next week..</li>
+              <li>Cardiology department now open on weekends with extended hours.</li>
+              <li>Blood donation drive organized on campus this Friday.</li>
             </ul>
           </div>
           <div className="rounded-xl bg-white p-5 border border-slate-200 shadow-sm">
@@ -158,8 +159,9 @@ function Dashboard() {
               Health Tips
             </h3>
             <ul className="mt-3 space-y-2 text-sm text-slate-600 list-disc list-inside">
-              <li>Stay hydrated and get 7-8 hours of sleep.</li>
-              <li>30 minutes of daily walking improves cardiovascular health.</li>
+              <li>Stay hydrated and aim for 7–8 hours of quality sleep daily.</li>
+              <li>Take at least 30 minutes of walking or light exercise every day for heart health.</li>
+              <li>Include more fruits, vegetables, and whole grains in your diet.</li> 
             </ul>
           </div>
         </section>
