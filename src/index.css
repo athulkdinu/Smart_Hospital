@@ -3,3 +3,84 @@
   @apply w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700
          bg-gray-50 dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400;
 } */
+/* In index.css */
+.bg-overlay::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, rgba(0,255,220,0.15), rgba(0,150,255,0.15));
+  mix-blend-mode: overlay;
+  animation: gradientMove 6s infinite alternate ease-in-out;
+}
+
+@keyframes gradientMove {
+  from { transform: translateX(-10%) translateY(-10%); }
+  to { transform: translateX(10%) translateY(10%); }
+}
+/* Add these in your CSS file (e.g., src/index.css or App.css) */
+
+/* Gradient Text */
+.text-gradient {
+  background: linear-gradient(to right, #059669, #14b8a6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Smooth background overlay motion */
+@keyframes gradientMove {
+  0% {
+    transform: translate(-10px, -10px);
+  }
+  100% {
+    transform: translate(10px, 10px);
+  }
+}
+.animate-gradientMove {
+  animation: gradientMove 6s ease-in-out infinite alternate;
+}
+
+/* Input & select focus glow */
+input:focus,
+select:focus {
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+  outline: none;
+}
+
+/* Button hover glow */
+button:hover {
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+}
+
+/* Toast theme (match MediConnect) */
+:root {
+  --toastify-color-success: #10b981;
+  --toastify-color-error: #ef4444;
+}
+/* Custom dropdown styling */
+.custom-select {
+  background-color: rgba(255, 255, 255, 0.8);
+  transition: all 0.25s ease-in-out;
+}
+
+/* When focused */
+.custom-select:focus {
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
+}
+
+/* Dropdown options styling (browser-dependent but helps in most cases) */
+.custom-select option {
+  background-color: #ecfdf5; /* emerald-50 tone */
+  color: #064e3b; /* emerald-900 tone */
+  font-weight: 500;
+  padding: 10px;
+}
+
+/* Smooth focus glow */
+.custom-select:hover {
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.25);
+}
+
+/* Rounded corner for dropdown */
+select::-ms-expand {
+  display: none;
+}
