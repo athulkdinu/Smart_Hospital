@@ -1,28 +1,59 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import Layout from '../components/Layout'
 import SymptomButton from '../components/SymptomButton'
 import DoctorCard from '../components/DoctorCard'
 import ChatBotPlaceholder from '../components/ChatBotPlaceholder'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import StatCard from '../components/StatCard'
 import FilterPill from '../components/FilterPill'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faClockRotateLeft, faUserDoctor, faBullhorn, faHeartPulse, faBandAid } from '@fortawesome/free-solid-svg-icons'
+import { faClockRotateLeft, faUserDoctor, faBullhorn, faHeartPulse, faBandAid, faMagnifyingGlass, faArrowDownAZ } from '@fortawesome/free-solid-svg-icons'
+import { getAllDoctors } from '../services/doctorApi'
 
 function Dashboard() {
-  const patient = { name: 'Athul' }
+  const navigate = useNavigate()
+  const storedUser = JSON.parse(localStorage.getItem('user') || 'null')
+  const patientName = storedUser?.role === 'patient' ? storedUser.name : 'Athul'
   const symptoms = ['Fever', 'Cough', 'Headache', 'Cold', 'Stomachache']
   const categories = ['All', 'General Medicine', 'Pediatrics', 'Neurology', 'Gastroenterology']
   const [activeSymptom, setActiveSymptom] = useState('')
   const [category, setCategory] = useState('All')
   const [availabilityOnly, setAvailabilityOnly] = useState(false)
+  const [search, setSearch] = useState('')
+  const [sortBy, setSortBy] = useState('Relevance') // Relevance | Availability | Name
 
-  const doctors = [
-    { id: 1, name: 'Dr. Aisha Khan', department: 'General Medicine', available: true, tags: ['Fever', 'Cough'] },
-    { id: 2, name: 'Dr. Rohit Menon', department: 'Pediatrics', available: false, tags: ['Cold'] },
-    { id: 3, name: 'Dr. Neha Verma', department: 'Neurology', available: true, tags: ['Headache'] },
-    { id: 4, name: 'Dr. Arjun Iyer', department: 'Gastroenterology', available: true, tags: ['Stomachache'] }
-  ]
+  const [doctors, setDoctors] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    let cancelled = false
+    const fetchDoctors = async () => {
+      try {
+        setLoading(true)
+        setError('')
+        const data = await getAllDoctors()
+        if (!cancelled && Array.isArray(data)) {
+          const mapped = data.map(d => ({
+            id: d.id,
+            name: d.name,
+            department: d.specialization || 'General Medicine',
+            available: true,
+            tags: []
+          }))
+          setDoctors(mapped)
+        }
+      } catch (e) {
+        if (!cancelled) setError('Failed to load doctors')
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    fetchDoctors()
+    const onFocus = () => fetchDoctors()
+    window.addEventListener('focus', onFocus)
+    return () => { cancelled = true; window.removeEventListener('focus', onFocus) }
+  }, [])
 
   const filteredDoctors = useMemo(() => {
     let list = doctors
@@ -35,23 +66,47 @@ function Dashboard() {
     if (availabilityOnly) {
       list = list.filter(d => d.available)
     }
+    if (search.trim()) {
+      const q = search.toLowerCase()
+      list = list.filter(d =>
+        d.name.toLowerCase().includes(q) ||
+        d.department.toLowerCase().includes(q)
+      )
+    }
+
+    if (sortBy === 'Availability') {
+      list = [...list].sort((a, b) => Number(b.available) - Number(a.available))
+    } else if (sortBy === 'Name') {
+      list = [...list].sort((a, b) => a.name.localeCompare(b.name))
+    }
+
     return list
-  }, [activeSymptom, category, availabilityOnly])
+  }, [activeSymptom, category, availabilityOnly, search, sortBy, doctors])
 
   function handleBook(doctor) {
     alert(`Booked consultation with ${doctor.name}`)
   }
 
+  useEffect(() => {
+    if (!storedUser || storedUser.role !== 'patient') {
+      navigate('/login')
+    }
+  }, [storedUser, navigate])
+
   return (
-    <Layout patientName={patient.name}>
+    <Layout patientName={patientName}>
       <main className="mx-auto max-w-6xl px-4 py-6 space-y-6">
-        <section className="relative overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-r from-[var(--brand-grad-from)] to-[var(--brand-grad-to)] p-6">
+        <section className="relative overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-r from-[var(--brand-grad-from)] to-[var(--brand-grad-to)] p-6 shadow-sm">
           <div className="relative z-10">
-            <h2 className="text-2xl font-bold text-slate-800">Welcome back, {patient.name}</h2>
-            <p className="mt-1 text-slate-600">Manage your care, appointments, and records in one place.</p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Link to="/appointments" className="rounded-md bg-[var(--brand-solid)] px-4 py-2 text-white text-sm hover:bg-[var(--brand-solid-hover)]">View Appointments</Link>
-              <Link to="/profile" className="rounded-md bg-white px-4 py-2 text-slate-700 text-sm border border-slate-200 hover:bg-slate-50">View Profile</Link>
+            <div className="flex items-start justify-between gap-4 flex-wrap">
+              <div>
+                <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Welcome back, {patientName}</h2>
+                <p className="mt-1 text-slate-700">Manage your care, appointments, and records in one place.</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Link to="/appointments" className="inline-flex items-center rounded-md bg-[var(--brand-solid)] px-4 py-2 text-white text-sm shadow hover:shadow-md transition hover:bg-[var(--brand-solid-hover)]">View Appointments</Link>
+                <Link to="/profile" className="inline-flex items-center rounded-md bg-white px-4 py-2 text-slate-700 text-sm border border-slate-200 hover:bg-slate-50">View Profile</Link>
+              </div>
             </div>
           </div>
           <div className="pointer-events-none absolute -top-10 -right-10 h-48 w-48 rounded-full bg-teal-200/40 blur-3xl" />
@@ -107,21 +162,75 @@ function Dashboard() {
               <FilterPill key={c} label={c} active={category === c} onClick={() => setCategory(c)} />
             ))}
           </div>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <button
+              className="rounded-md border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
+              onClick={() => { setActiveSymptom(''); setCategory('All'); setAvailabilityOnly(false); setSearch(''); setSortBy('Relevance') }}
+            >
+              Reset filters
+            </button>
+          </div>
         </section>
 
         <section className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h3 className="text-base font-semibold text-slate-800 flex items-center gap-2">
               <FontAwesomeIcon icon={faUserDoctor} className="text-slate-500" />
               Available Doctors
             </h3>
-            <span className="text-sm text-slate-500">{filteredDoctors.length} results</span>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <div className="relative">
+                <FontAwesomeIcon icon={faMagnifyingGlass} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search by doctor or department"
+                  className="w-full sm:w-64 rounded-md border border-slate-200 bg-white pl-9 pr-3 py-2 text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--brand-solid)]"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <FontAwesomeIcon icon={faArrowDownAZ} className="text-slate-500" />
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="rounded-md border border-slate-200 bg-white px-2 py-2 text-sm text-slate-700 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-[var(--brand-solid)]"
+                >
+                  <option>Relevance</option>
+                  <option>Availability</option>
+                  <option>Name</option>
+                </select>
+              </div>
+              <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2 py-1 text-xs text-slate-600 sm:ml-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                {filteredDoctors.length} results
+              </span>
+            </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredDoctors.map(doc => (
-              <DoctorCard key={doc.id} doctor={doc} onBook={handleBook} />
+            {!loading && !error && filteredDoctors.map(doc => (
+              <div key={doc.id} className="transform-gpu transition duration-200 hover:-translate-y-0.5 hover:shadow">
+                <DoctorCard doctor={doc} onBook={handleBook} />
+              </div>
+            ))}
+            {loading && Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="rounded-xl border border-slate-200 bg-white p-4 animate-pulse">
+                <div className="h-1 w-full rounded bg-slate-200 mb-3" />
+                <div className="h-5 w-2/3 bg-slate-200 rounded" />
+                <div className="h-4 w-1/3 bg-slate-200 rounded mt-2" />
+                <div className="h-9 w-28 bg-slate-200 rounded mt-4" />
+              </div>
             ))}
           </div>
+          {error && (
+            <div className="rounded-xl border border-dashed border-red-300 bg-red-50 p-6 text-center text-red-700">{error}</div>
+          )}
+          {!loading && !error && filteredDoctors.length === 0 && (
+            <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-slate-600">
+              <div className="mx-auto mb-2 h-8 w-8 rounded-full bg-slate-200" />
+              No doctors match your filters. Try adjusting search or filters.
+            </div>
+          )}
 
           <div className="pt-2">
             <Link to="/appointments" className="inline-block rounded-md bg-emerald-600 px-4 py-2 text-white text-sm hover:bg-emerald-700">

@@ -1,16 +1,12 @@
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useState, useEffect } from 'react'
 import Layout from '../components/Layout'
 import DoctorCard from '../components/DoctorCard'
 import FilterPill from '../components/FilterPill'
+import { getAllDoctors } from '../services/doctorApi'
+import { getAllAppointments } from '../services/appointmentApi'
 
 function Appointments() {
-  const availableDoctors = [
-    { id: 1, name: 'Dr. Aisha Khan', department: 'General Medicine', available: true },
-    { id: 2, name: 'Dr. Rohit Menon', department: 'Pediatrics', available: true },
-    { id: 3, name: 'Dr. Neha Verma', department: 'Neurology', available: false },
-    { id: 4, name: 'Dr. Arjun Iyer', department: 'Gastroenterology', available: true },
-    { id: 5, name: 'Dr. Priya Nair', department: 'Dermatology', available: true }
-  ]
+  const [availableDoctors, setAvailableDoctors] = useState([])
 
   const [selectedDoctorId, setSelectedDoctorId] = useState('')
   const [date, setDate] = useState('')
@@ -19,13 +15,56 @@ function Appointments() {
   const categories = ['All', ...Array.from(new Set(availableDoctors.map(d => d.department)))]
   const [category, setCategory] = useState('All')
   const [availabilityOnly, setAvailabilityOnly] = useState(false)
-  const [upcoming, setUpcoming] = useState([
-    { id: 'u1', date: '2025-11-12', time: '10:30', doctor: 'Dr. Neha Verma', type: 'Follow-up' }
-  ])
-  const previous = [
-    { id: 'p1', date: '2025-10-01', doctor: 'Dr. Aisha Khan', type: 'Consultation' },
-    { id: 'p2', date: '2025-09-15', doctor: 'Dr. Arjun Iyer', type: 'Consultation' }
-  ]
+  const [upcoming, setUpcoming] = useState([])
+  const [previous, setPrevious] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    let cancelled = false
+    const fetchAll = async () => {
+      try {
+        setLoading(true)
+        setError('')
+        const [docs, appts] = await Promise.all([
+          getAllDoctors(),
+          getAllAppointments()
+        ])
+        if (!cancelled && Array.isArray(docs)) {
+          const mappedDocs = docs.map(d => ({
+            id: d.id,
+            name: d.name,
+            department: d.specialization || 'General Medicine',
+            available: true
+          }))
+          setAvailableDoctors(mappedDocs)
+        }
+        if (!cancelled && Array.isArray(appts)) {
+          const doctorIdToName = new Map((docs || []).map(d => [String(d.id), d.name]))
+          const now = new Date()
+          const normalized = appts.map(a => ({
+            id: a.id,
+            date: a.date,
+            time: a.time,
+            doctor: doctorIdToName.get(String(a.doctorId)) || `Doctor #${a.doctorId}`,
+            type: 'Consultation'
+          }))
+          const upcomingList = normalized.filter(a => new Date(a.date) >= now)
+          const previousList = normalized.filter(a => new Date(a.date) < now)
+          setUpcoming(upcomingList)
+          setPrevious(previousList)
+        }
+      } catch (e) {
+        if (!cancelled) setError('Failed to load appointments')
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    fetchAll()
+    const onFocus = () => fetchAll()
+    window.addEventListener('focus', onFocus)
+    return () => { cancelled = true; window.removeEventListener('focus', onFocus) }
+  }, [])
 
   const selectedDoctor = useMemo(
     () => availableDoctors.find(d => String(d.id) === String(selectedDoctorId)),
@@ -141,10 +180,16 @@ function Appointments() {
               </label>
             </div>
             <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {displayedDoctors.map(doc => (
+              {!loading && !error && displayedDoctors.map(doc => (
                 <DoctorCard key={doc.id} doctor={doc} onBook={quickBook} />
               ))}
             </div>
+            {loading && (
+              <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-slate-600">Loading…</div>
+            )}
+            {error && (
+              <div className="rounded-xl border border-dashed border-red-300 bg-red-50 p-6 text-center text-red-700">{error}</div>
+            )}
           </div>
         </section>
 

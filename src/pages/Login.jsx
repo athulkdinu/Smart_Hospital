@@ -12,6 +12,8 @@ const Login = () => {
 
   const handleLogin = (e) => {
     e.preventDefault();
+    setError("");
+
     let user = null;
 
     if (role === "doctor") {
@@ -28,11 +30,19 @@ const Login = () => {
       );
     }
 
-    if (user) {
-      localStorage.setItem("user", JSON.stringify({ ...user, role }));
-      navigate("/dashboard");
-    } else {
+    if (!user) {
       setError("Invalid Login ID or Password!");
+      return;
+    }
+
+    localStorage.setItem("user", JSON.stringify({ ...user, role }));
+
+    if (role === "doctor") {
+      navigate("/doctor");
+    } else if (role === "administrator") {
+      navigate("/admin");
+    } else {
+      navigate("/dashboard");
     }
   };
 

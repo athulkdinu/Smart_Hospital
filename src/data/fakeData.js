@@ -1,5 +1,5 @@
 export const doctors = [
-  { id: 1, name: 'Dr. Aisha Khan', loginId: 'doc1', password: '1234', department: 'General Medicine', available: true, tags: ['Fever', 'Cough'] },
+  { id: 1, name: 'Dr. Abin', loginId: 'doc1', password: '1234', department: 'General Medicine', available: true, tags: ['Fever', 'Cough'] },
   { id: 2, name: 'Dr. Rohit Menon', loginId: 'doc2', password: '1234', department: 'Pediatrics', available: false, tags: ['Cold'] },
   { id: 3, name: 'Dr. Neha Verma', loginId: 'doc3', password: '1234', department: 'Neurology', available: true, tags: ['Headache'] },
   { id: 4, name: 'Dr. Arjun Iyer', loginId: 'doc4', password: '1234', department: 'Gastroenterology', available: true, tags: ['Stomachache'] }
