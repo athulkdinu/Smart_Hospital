@@ -10,7 +10,7 @@ function ChatBotPlaceholder() {
         <h3 className="font-semibold">Chat with us</h3>
       </div>
       <p className="text-sm text-slate-600 mt-2">Our assistant will appear here. Start a conversation to get help.</p>
-      <div className="mt-3 h-24 rounded-lg bg-[var(--brand-tint)] border border-dashed border-[var(--brand-border)]" />
+      <div className="mt-3 h-24 rounded-lg bg-[var(--brand-tint)] border border-dashed border-[var(--brand-border)]"/>   
     </div>
   )
 }
