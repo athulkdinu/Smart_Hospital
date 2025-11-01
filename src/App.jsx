@@ -5,6 +5,9 @@ import Profile from './pages/Profile'
 import Appointments from './pages/Appointments'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import DoctorDashboard from './pages/Doctor_Dashboard'
+import MyPatientsPage from './pages/MyPatientsPage'
+import DrProfilePage from './pages/Dr_Profile_Page'
 
 function App() {
   const user = JSON.parse(localStorage.getItem('user'))
@@ -26,6 +29,18 @@ function App() {
       <Route
         path="/appointments"
         element={user ? <Appointments /> : <Navigate to="/login" replace />}
+      />
+      <Route
+        path="/doctor"
+        element={user ? <DoctorDashboard /> : <Navigate to="/login" replace />}
+      />
+      <Route
+        path="/patient_history"
+        element={user ? <MyPatientsPage /> : <Navigate to="/login" replace />}
+      />
+      <Route
+        path="/dr_profile"
+        element={user ? <DrProfilePage /> : <Navigate to="/login" replace />}
       />
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
