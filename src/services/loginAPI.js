@@ -1,8 +1,8 @@
-import axios from "axios";
+// src/services/loginAPI.js
+import commonAPI from "./commonAPI";
+import BASEURL from "./serverURL";
 
-const BASE_URL = "http://localhost:5000"; // Backend JSON Server URL
-
-// Role-based login
+// 🔐 Role-based login function
 export const loginUser = async (loginId, password, role) => {
   try {
     let endpoint = "";
@@ -11,17 +11,16 @@ export const loginUser = async (loginId, password, role) => {
     else if (role === "administrator") endpoint = "admins";
     else endpoint = "patients";
 
-    const response = await axios.get(
-      `${BASE_URL}/${endpoint}?loginId=${loginId}&password=${password}`
-    );
+    const url = `${BASEURL}/${endpoint}?loginId=${loginId}&password=${password}`;
+    const data = await commonAPI("GET", url);
 
-    if (response.data.length > 0) {
-      return response.data[0]; // return user object
+    if (data && data.length > 0) {
+      return data[0]; // return the matched user object
     }
 
     return null;
   } catch (err) {
-    console.error("Login API error:", err);
+    console.error("Login API Error:", err);
     throw err;
   }
 };

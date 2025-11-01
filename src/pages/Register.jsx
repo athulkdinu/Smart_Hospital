@@ -51,7 +51,7 @@ const Register = () => {
 
       if (response.status === 201) {
         setGeneratedId(loginId);
-        setMessage("Registration successful! Your login details are below:");
+        setMessage(" Registration successful! Your login details are below:");
       }
     } catch (err) {
       console.error("Registration error:", err);
