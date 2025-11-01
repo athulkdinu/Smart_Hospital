@@ -1,65 +1,123 @@
 import React, { useState, useEffect, useRef } from "react";
-// import axios from "axios"; // Uncomment for backend
-
-// Mock data and fetch functions
-const fetchPatients = async () => {
-  return [
-    { id: 1, token: 101, name: "Akhil K S", complaint: "Fever", status: "Pending" },
-    { id: 2, token: 102, name: "Dinu M", complaint: "Headache", status: "Pending" },
-    { id: 3, token: 103, name: "Meena T", complaint: "Routine Checkup", status: "Completed" },
-    { id: 4, token: 104, name: "Rahul P", complaint: "Cold", status: "Pending" },
-    { id: 5, token: 105, name: "Asha V", complaint: "Back Pain", status: "Completed" },
-  ];
-};
-
-const patientHistories = {
-  1: [{ date: "2025-10-20", note: "Mild fever", prescription: "Paracetamol 500mg" }],
-  2: [{ date: "2025-10-18", note: "Migraine", prescription: "Ibuprofen 200mg" }],
-  3: [{ date: "2025-09-25", note: "Checkup", prescription: "Vitamin D tabs" }],
-  4: [{ date: "2025-09-05", note: "Cough", prescription: "Cough syrup" }],
-  5: [{ date: "2025-08-15", note: "Back Pain", prescription: "Diclofenac Gel" }],
-};
-
-const appointmentsMock = [
-  { time: "09:00 AM", name: "Akhil K S", status: "Completed" },
-  { time: "10:00 AM", name: "Dinu M", status: "Pending" },
-  { time: "11:30 AM", name: "Meena T", status: "Completed" },
-  { time: "12:45 PM", name: "Rahul P", status: "Upcoming" },
-];
+import "./doctorDashboard.css";
+import { getAllAppoinments, getAllTockens } from "../services/doctor_api";
 
 export default function DoctorDashboard() {
   const [queue, setQueue] = useState([]);
   const [filteredQueue, setFilteredQueue] = useState([]);
+  const [appointments, setAppointments] = useState([]); // ✅ fixed missing state
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("token");
   const [filterStatus, setFilterStatus] = useState("All");
   const [currentPatient, setCurrentPatient] = useState(null);
   const [notes, setNotes] = useState("");
   const [stats, setStats] = useState({ completed: 0, skipped: 0, avgTime: 0 });
-  const [appointments] = useState(appointmentsMock);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [showPrevPatients, setShowPrevPatients] = useState(false);
   const [searchPrev, setSearchPrev] = useState("");
 
   const startTimeRef = useRef(null);
 
+  // ✅ Fetch tokens (patients)
   useEffect(() => {
-    const loadData = async () => {
-      const data = await fetchPatients();
-      setQueue(data);
-      setFilteredQueue(data);
+    let cancelled = false;
+
+    const fetchTokens = async () => {
+      try {
+        setLoading(true);
+        setError("");
+        const data = await getAllTockens();
+        if (!cancelled) {
+          if (Array.isArray(data) && data.length > 0) {
+            const mapped = data.map((d) => ({
+              id: d.id,
+              name: d.name,
+              token: d.token,
+              complaint: d.complaint,
+              status: d.status,
+            }));
+            setQueue(mapped);
+          } else {
+            setError("No tokens found. Please check your backend data.");
+          }
+        }
+      } catch (e) {
+        if (!cancelled) {
+          console.error("Error fetching tokens:", e);
+          setError("Failed to load tokens from backend.");
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     };
-    loadData();
+
+    fetchTokens();
+    const onFocus = () => fetchTokens();
+    window.addEventListener("focus", onFocus);
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener("focus", onFocus);
+    };
   }, []);
 
-  useEffect(() => {
-    const refresh = setInterval(async () => {
-      const data = await fetchPatients();
-      setQueue(data);
-      applyFilters(data);
-    }, 30000);
-    return () => clearInterval(refresh);
-  }, [sortBy, searchTerm, filterStatus]);
+  // ✅ Fetch appointments
+useEffect(() => {
+  let cancelled = false;
 
+  const fetchAppointments = async () => {
+    try {
+      setLoading(true);
+      setError("");
+      const data = await getAllAppoinments();
+      if (!cancelled) {
+        if (Array.isArray(data) && data.length > 0) {
+          // map according to the new structure
+          const mapped = data.map((d) => ({
+            id: d.id,
+            patientId: d.patientId,
+            patientName: d.patientName,
+            patientEmail: d.patientEmail,
+            doctorId: d.doctorId,
+            doctorName: d.doctorName,
+            date: d.date,
+            time: d.time,
+            issue: d.issue,
+          }));
+          console.log("Appointments:", mapped);
+          // Store this in a new state
+          setAppointments(mapped);
+        } else {
+          setError(
+            "No appointments found. Please check if the backend is running on http://localhost:3000"
+          );
+        }
+      }
+    } catch (e) {
+      if (!cancelled) {
+        console.error("Fetch appointments error:", e);
+        setError(
+          "Failed to load appointments. Please check if the backend server is running."
+        );
+      }
+    } finally {
+      if (!cancelled) setLoading(false);
+    }
+  };
+
+  fetchAppointments();
+  const onFocus = () => fetchAppointments();
+  window.addEventListener("focus", onFocus);
+
+  return () => {
+    cancelled = true;
+    window.removeEventListener("focus", onFocus);
+  };
+}, []);
+
+
+  // ✅ Filtering, sorting, searching
   const applyFilters = (list = queue) => {
     let result = [...list];
 
@@ -87,6 +145,7 @@ export default function DoctorDashboard() {
     applyFilters();
   }, [searchTerm, sortBy, filterStatus, queue]);
 
+  // ✅ Actions
   const handleNext = () => {
     const next = queue.find((p) => p.status === "Pending");
     if (!next) return alert("No pending patients.");
@@ -114,6 +173,7 @@ export default function DoctorDashboard() {
       )
     );
     setCurrentPatient(null);
+    setNotes("");
   };
 
   const handleSkip = () => {
@@ -125,27 +185,28 @@ export default function DoctorDashboard() {
       )
     );
     setCurrentPatient(null);
+    setNotes("");
   };
 
-  const getHistory = (id) => patientHistories[id] || [];
-
   const prevPatients = queue.filter((p) => p.status === "Completed");
-
   const filteredPrevPatients = prevPatients.filter(
     (p) =>
       p.name.toLowerCase().includes(searchPrev.toLowerCase()) ||
       p.token.toString().includes(searchPrev)
   );
 
+  const statClassFromColor = (color) =>
+    `stat${color.charAt(0).toUpperCase() + color.slice(1)}`;
+
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
+    <div className="min-h-screen bg-gray-100 p-6 fadeIn">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-gray-800">Doctor Dashboard</h1>
         <div className="flex items-center gap-4">
           <button
             onClick={() => setShowPrevPatients(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-xl shadow"
+            className="bg-blue-600 text-white px-4 py-2 rounded-xl shadow btn"
           >
             View Previous Patients
           </button>
@@ -155,17 +216,36 @@ export default function DoctorDashboard() {
         </div>
       </div>
 
+      {/* Loading/Error */}
+      {loading && <p className="text-blue-600 mb-4">Loading data...</p>}
+      {error && <p className="text-red-600 mb-4">{error}</p>}
+
       {/* Stats */}
       <div className="grid grid-cols-4 gap-6 mb-6">
         {[
-          { label: "Pending", value: queue.filter((q) => q.status === "Pending").length, color: "blue" },
+          {
+            label: "Pending",
+            value: queue.filter((q) => q.status === "Pending").length,
+            color: "blue",
+          },
           { label: "Completed", value: stats.completed, color: "green" },
           { label: "Skipped", value: stats.skipped, color: "red" },
-          { label: "Avg Time (min)", value: stats.avgTime.toFixed(1), color: "yellow" },
+          {
+            label: "Avg Time (min)",
+            value: stats.avgTime.toFixed(1),
+            color: "yellow",
+          },
         ].map((s, i) => (
-          <div key={i} className="bg-white rounded-2xl shadow-md p-5 text-center">
+          <div
+            key={i}
+            className="bg-white rounded-2xl shadow-md p-5 text-center fadeIn"
+          >
             <div className="text-gray-500">{s.label}</div>
-            <div className={`text-3xl font-bold text-${s.color}-600 mt-2`}>{s.value}</div>
+            <div
+              className={`text-3xl font-bold ${statClassFromColor(s.color)} mt-2`}
+            >
+              {s.value}
+            </div>
           </div>
         ))}
       </div>
@@ -208,7 +288,7 @@ export default function DoctorDashboard() {
       {/* Main Layout */}
       <div className="grid grid-cols-4 gap-6">
         {/* Queue */}
-        <div className="col-span-1 bg-white rounded-2xl shadow-md p-6">
+        <div className="col-span-1 card fadeIn p-6">
           <h2 className="text-lg font-semibold mb-3">Patient Queue</h2>
           <div className="space-y-3 overflow-y-auto h-[70vh]">
             {filteredQueue.map((p) => (
@@ -222,7 +302,7 @@ export default function DoctorDashboard() {
                     ? "border-green-300 bg-green-50"
                     : p.status === "Skipped"
                     ? "border-red-300 bg-red-50"
-                    : "border-gray-200 bg-gray-50"
+                    : "border-gray-200 bg-white"
                 }`}
               >
                 <div className="flex justify-between">
@@ -237,20 +317,22 @@ export default function DoctorDashboard() {
           </div>
           <button
             onClick={handleNext}
-            className="mt-4 w-full bg-blue-600 text-white py-2 rounded-xl shadow"
+            className="mt-4 w-full bg-blue-600 text-white py-2 rounded-xl shadow btn"
           >
             Next Patient
           </button>
         </div>
 
         {/* Current Patient */}
-        <div className="col-span-2 bg-white rounded-2xl shadow-md p-6">
+        <div className="col-span-2 card fadeIn p-6">
           <h2 className="text-xl font-semibold mb-3">Current Patient</h2>
           {currentPatient ? (
             <>
               <div className="flex justify-between">
                 <div>
-                  <div className="font-semibold text-lg">{currentPatient.name}</div>
+                  <div className="font-semibold text-lg">
+                    {currentPatient.name}
+                  </div>
                   <div className="text-sm text-gray-500">
                     Token #{currentPatient.token}
                   </div>
@@ -273,28 +355,16 @@ export default function DoctorDashboard() {
               <div className="flex justify-end gap-3 mt-3">
                 <button
                   onClick={handleComplete}
-                  className="bg-green-600 text-white px-4 py-2 rounded-xl shadow"
+                  className="bg-green-600 text-white px-4 py-2 rounded-xl shadow btn"
                 >
                   Complete
                 </button>
                 <button
                   onClick={handleSkip}
-                  className="bg-red-600 text-white px-4 py-2 rounded-xl shadow"
+                  className="bg-red-600 text-white px-4 py-2 rounded-xl shadow btn"
                 >
                   Skip
                 </button>
-              </div>
-
-              {/* History */}
-              <div className="mt-5 bg-gray-50 p-3 rounded-xl">
-                <h3 className="font-semibold mb-2">Previous Visits</h3>
-                {getHistory(currentPatient.id).map((h, i) => (
-                  <div key={i} className="text-sm text-gray-700">
-                    <div>{h.date}</div>
-                    <div>{h.note}</div>
-                    <div className="text-xs italic text-gray-500">{h.prescription}</div>
-                  </div>
-                ))}
               </div>
             </>
           ) : (
@@ -302,79 +372,32 @@ export default function DoctorDashboard() {
           )}
         </div>
 
-        {/* Appointments */}
-        <div className="col-span-1 bg-white rounded-2xl shadow-md p-6">
-          <h2 className="text-lg font-semibold mb-3">Today's Appointments</h2>
-          <div className="space-y-3">
-            {appointments.map((a, idx) => (
-              <div key={idx} className="p-3 bg-gray-50 rounded-xl border">
-                <div className="flex justify-between">
-                  <div>
-                    <div className="font-medium">{a.name}</div>
-                    <div className="text-xs text-gray-500">{a.time}</div>
-                  </div>
-                  <div className="text-xs text-gray-600">{a.status}</div>
-                </div>
-              </div>
-            ))}
+        {/* Appointments Section */}
+        <div className="col-span-1 card fadeIn p-6">
+  <h2 className="text-lg font-semibold mb-3">Upcoming Appointments</h2>
+  {appointments.length === 0 ? (
+    <p className="text-gray-500 text-center">No appointments found.</p>
+  ) : (
+    <div className="space-y-3 overflow-y-auto h-[70vh]">
+      {appointments.map((a) => (
+        <div key={a.id} className="p-3 rounded-xl border bg-white shadow-sm">
+          <div className="font-medium text-gray-800">{a.patientName}</div>
+          <div className="text-xs text-gray-500">{a.patientEmail}</div>
+          <div className="text-sm text-gray-600 mt-1">
+            {a.date} — {a.time}
+          </div>
+          <div className="text-sm text-gray-600">
+            Doctor: {a.doctorName}
+          </div>
+          <div className="text-sm text-gray-600 italic">
+            Issue: {a.issue}
           </div>
         </div>
+      ))}
+    </div>
+  )}
+</div>
       </div>
-
-      {/* Previous Patients Modal */}
-      {/* {showPrevPatients && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl shadow-2xl w-3/4 max-h-[80vh] overflow-y-auto p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-semibold">Previous Patients</h2>
-              <button
-                onClick={() => setShowPrevPatients(false)}
-                className="text-gray-600 hover:text-gray-900 text-xl font-bold"
-              >
-                ✕
-              </button>
-            </div>
-
-            <input
-              type="text"
-              placeholder="Search by name or token..."
-              className="w-full p-2 border rounded-xl mb-4"
-              value={searchPrev}
-              onChange={(e) => setSearchPrev(e.target.value)}
-            />
-
-            <div className="overflow-x-auto">
-              <table className="min-w-full border border-gray-200">
-                <thead className="bg-gray-100">
-                  <tr>
-                    <th className="text-left p-3 border-b">Name</th>
-                    <th className="text-left p-3 border-b">Token</th>
-                    <th className="text-left p-3 border-b">Complaint</th>
-                    <th className="text-left p-3 border-b">Last Visit</th>
-                    <th className="text-left p-3 border-b">Prescription</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredPrevPatients.map((p) => {
-                    const lastVisit = getHistory(p.id)[0];
-                    return (
-                      <tr key={p.id} className="hover:bg-gray-50">
-                        <td className="p-3 border-b">{p.name}</td>
-                        <td className="p-3 border-b">#{p.token}</td>
-                        <td className="p-3 border-b">{p.complaint}</td>
-                        <td className="p-3 border-b">{lastVisit?.date || "—"}</td>
-                        <td className="p-3 border-b">
-                          {lastVisit?.prescription || "—"}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )} */}
-    </div> 
+    </div>
   );
 }
