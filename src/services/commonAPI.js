@@ -29,3 +29,5 @@ const commonAPI = async (method, url, data = {}) => {
 };
 
 export default commonAPI;
+
+

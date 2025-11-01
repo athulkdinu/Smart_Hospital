@@ -1,0 +1,8 @@
+@import "tailwindcss";
+
+/* 🌿 Global look - minimal global styles only */
+html,
+body {
+  height: 100%;
+  font-family: "Poppins", sans-serif;
+}
