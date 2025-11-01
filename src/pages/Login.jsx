@@ -53,7 +53,7 @@ const Login = () => {
     "https://cdn.dribbble.com/userupload/23002793/file/original-3f028f30f7f023f692a0d341f2ca3741.gif";
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row overflow-hidden">
+    <div className="auth-page min-h-screen flex flex-col lg:flex-row overflow-hidden">
       {/* LEFT SIDE - QUOTE SECTION */}
       <motion.div
         initial={{ opacity: 0, x: -50 }}

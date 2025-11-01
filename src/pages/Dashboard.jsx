@@ -133,7 +133,7 @@ function Dashboard() {
                 <FontAwesomeIcon icon={faClockRotateLeft} className="text-slate-500" />
                 Your History
               </h2>
-              <button className="rounded-md bg-[var(--brand-solid)] px-3 py-2 text-sm text-white hover:bg-[var(--brand-solid-hover)]">View</button>
+              <Link to="/patient_history" className="rounded-md bg-[var(--brand-solid)] px-3 py-2 text-sm text-white hover:bg-[var(--brand-solid-hover)]">View</Link>
             </div>
             <p className="text-sm text-slate-500 mt-2">Past appointments, prescriptions and lab reports.</p>
           </div>

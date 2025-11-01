@@ -30,7 +30,7 @@ const Register = () => {
 
   return (
     <div
-      className="h-screen flex items-center justify-center bg-cover bg-center relative overflow-hidden"
+      className="auth-page h-screen flex items-center justify-center bg-cover bg-center relative overflow-hidden"
       style={{ backgroundImage: `url("${bgUrl}")` }}
     >
       {/* Background blur overlay */}
