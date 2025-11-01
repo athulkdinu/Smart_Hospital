@@ -277,12 +277,11 @@ function Dashboard() {
             </motion.div>
           </motion.section>
 
-          {/* History & Chat Section */}
+          {/* History Section */}
           <motion.section
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-6"
           >
             <motion.div
               whileHover={{ scale: 1.02, y: -3 }}
@@ -302,10 +301,6 @@ function Dashboard() {
               </div>
               <p className="text-sm text-gray-600">Past appointments, prescriptions and lab reports.</p>
             </motion.div>
-
-            <div className="md:col-span-2">
-              <BotpressChatbot />
-            </div>
           </motion.section>
 
           {/* Symptoms Section */}
@@ -502,6 +497,9 @@ function Dashboard() {
           </motion.section>
         </main>
       </div>
+      
+      {/* Floating Chat Button */}
+      <BotpressChatbot floating={true} />
     </Layout>
   )
 }

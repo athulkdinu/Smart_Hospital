@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faMessage, faTimes, faHeadset } from '@fortawesome/free-solid-svg-icons'
 import { motion, AnimatePresence } from 'framer-motion'
 
-function BotpressChatbot() {
+function BotpressChatbot({ floating = true }) {
   const [isMinimized, setIsMinimized] = useState(true)
   const [botpressReady, setBotpressReady] = useState(false)
   const chatContainerRef = useRef(null)
@@ -288,6 +288,92 @@ function BotpressChatbot() {
     return () => window.removeEventListener('message', handleMessage)
   }, [])
 
+  // Floating button mode - simple and clean
+  if (floating) {
+    return (
+      <>
+        {/* Floating Chat Button */}
+        <AnimatePresence>
+          {isMinimized && (
+            <motion.button
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0, opacity: 0 }}
+              onClick={toggleChat}
+              className="fixed bottom-6 right-6 z-50 rounded-full bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white shadow-2xl hover:shadow-3xl transition-all hover:scale-110 p-4"
+              aria-label="Open chat"
+            >
+              <FontAwesomeIcon icon={faMessage} className="text-lg" />
+              <span className="absolute -top-1 -right-1 flex h-4 w-4">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-600"></span>
+              </span>
+            </motion.button>
+          )}
+        </AnimatePresence>
+
+        {/* Chat Modal/Window */}
+        {!isMinimized && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            className="fixed bottom-24 right-6 z-50 w-96 max-w-[calc(100vw-3rem)] h-[500px] max-h-[calc(100vh-8rem)]"
+          >
+            <div className="rounded-2xl border border-emerald-100/50 bg-white/95 backdrop-blur-xl shadow-2xl overflow-hidden h-full flex flex-col" style={{ fontFamily: botpressConfig.fontFamily }}>
+              {/* Chat Header */}
+              <div 
+                className="flex items-center justify-between p-4 text-white"
+                style={{ 
+                  background: `linear-gradient(to right, ${botpressConfig.primaryColor}, ${botpressConfig.secondaryColor})`,
+                  fontFamily: botpressConfig.headerFontFamily
+                }}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="rounded-full bg-white/20 p-1.5 backdrop-blur-sm">
+                    <FontAwesomeIcon icon={faHeadset} className="text-white text-sm" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-base" style={{ fontFamily: botpressConfig.headerFontFamily }}>
+                      {botpressConfig.headerTitle}
+                    </h3>
+                    <p className="text-xs text-white/90">Online • Ready to help</p>
+                  </div>
+                </div>
+                <button
+                  onClick={minimizeChat}
+                  className="rounded-full bg-white/20 hover:bg-white/30 p-2 transition-all backdrop-blur-sm"
+                  aria-label="Minimize chat"
+                >
+                  <FontAwesomeIcon icon={faTimes} className="text-white text-sm" />
+                </button>
+              </div>
+
+              {/* Chat Container */}
+              <div 
+                ref={chatContainerRef}
+                className="relative flex-1 overflow-hidden" 
+                style={{ 
+                  background: `linear-gradient(to bottom, ${botpressConfig.backgroundColor}, #FFFFFF)`,
+                }}
+              >
+                {!botpressReady && (
+                  <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500 mb-2"></div>
+                      <p className="text-sm text-gray-600">Loading chatbot...</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </>
+    )
+  }
+
+  // Original embedded widget mode (for backwards compatibility)
   return (
     <div className="relative">
       {/* Chat Widget Container - Matching Dashboard Theme */}
