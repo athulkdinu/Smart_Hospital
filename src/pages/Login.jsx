@@ -14,19 +14,23 @@ const Login = () => {
     e.preventDefault();
     setError("");
 
+    // Trim whitespace from inputs
+    const trimmedLoginId = loginId.trim();
+    const trimmedPassword = password.trim();
+
     let user = null;
 
     if (role === "doctor") {
       user = doctors.find(
-        (doc) => doc.loginId === loginId && doc.password === password
+        (doc) => doc.loginId === trimmedLoginId && doc.password === trimmedPassword
       );
     } else if (role === "administrator") {
       user = administrators.find(
-        (admin) => admin.loginId === loginId && admin.password === password
+        (admin) => admin.loginId === trimmedLoginId && admin.password === trimmedPassword
       );
     } else {
       user = patients.find(
-        (p) => p.loginId === loginId && p.password === password
+        (p) => p.loginId === trimmedLoginId && p.password === trimmedPassword
       );
     }
 
