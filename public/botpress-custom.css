@@ -1,0 +1,99 @@
+/* Custom Botpress Webchat Styles */
+body {
+  font-family: Arial, sans-serif !important;
+}
+
+.bp-widget-container {
+  background-color: #F5F5F5 !important;
+  width: 350px !important;
+  height: 500px !important;
+  border-radius: 12px !important;
+  position: fixed !important;
+  right: 20px !important;
+  bottom: 20px !important;
+}
+
+.bp-widget-header {
+  font-family: Helvetica, sans-serif !important;
+  background-color: #1E90FF !important;
+  color: #FFFFFF !important;
+  border-radius: 12px 12px 0 0 !important;
+  padding: 15px !important;
+}
+
+.bp-widget-header-title {
+  font-family: Helvetica, sans-serif !important;
+  color: #FFFFFF !important;
+  font-weight: bold !important;
+}
+
+.bp-widget-header-logo {
+  max-width: 40px !important;
+  max-height: 40px !important;
+  border-radius: 50% !important;
+}
+
+.bp-message-bot {
+  background-color: #E0F7FA !important;
+  color: #000000 !important;
+  border-radius: 12px !important;
+  padding: 10px 15px !important;
+  margin: 5px 0 !important;
+  font-family: Arial, sans-serif !important;
+}
+
+.bp-message-user {
+  background-color: #DCF8C6 !important;
+  color: #000000 !important;
+  border-radius: 12px !important;
+  padding: 10px 15px !important;
+  margin: 5px 0 !important;
+  font-family: Arial, sans-serif !important;
+}
+
+.bp-composer {
+  background-color: #F5F5F5 !important;
+  border-top: 1px solid #E0E0E0 !important;
+  padding: 10px !important;
+  border-radius: 0 0 12px 12px !important;
+}
+
+.bp-composer-input {
+  font-family: Arial, sans-serif !important;
+  background-color: #FFFFFF !important;
+  border-radius: 20px !important;
+  border: 1px solid #E0E0E0 !important;
+  padding: 10px 15px !important;
+}
+
+.bp-button {
+  background-color: #1E90FF !important;
+  color: #FFFFFF !important;
+  border-radius: 12px !important;
+  border: none !important;
+  padding: 10px 20px !important;
+  font-family: Arial, sans-serif !important;
+  cursor: pointer !important;
+  transition: background-color 0.3s ease !important;
+}
+
+.bp-button:hover {
+  background-color: #00CED1 !important;
+}
+
+.bp-widget-body {
+  background-color: #F5F5F5 !important;
+  font-family: Arial, sans-serif !important;
+}
+
+.bp-launcher-button {
+  background-color: #1E90FF !important;
+  border-radius: 50% !important;
+  width: 60px !important;
+  height: 60px !important;
+}
+
+.bp-launcher-button:hover {
+  background-color: #00CED1 !important;
+}
+
