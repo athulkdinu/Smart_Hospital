@@ -10,5 +10,7 @@ export const administrators = [
 ];
 
 export const patients = [
-  { id: 1, name: 'Athul', loginId: 'patient1', password: 'pass123', age: 25, address: 'Cochin', email: 'athul@mail.com', phone: '9876543210' }
+  { id: 1, name: 'Athul', loginId: 'patient1', password: 'pass123', age: 25, address: 'Cochin', email: 'athul@mail.com', phone: '9876543210' },
+  { id: 2, name: 'Akhil', loginId: 'pat2', password: '123', age: 25, address: 'Cochin', email: 'akhil@mail.com', phone: '9876543210' }
+
 ];
