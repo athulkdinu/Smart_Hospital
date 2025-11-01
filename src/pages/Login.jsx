@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate, Link } from "react-router-dom";
-import { doctors, administrators, patients } from "../data/fakeData";
+import { loginUser } from "../services/loginAPI"; // ✅ API import
 
 const Login = () => {
   const [role, setRole] = useState("patient");
@@ -10,51 +10,42 @@ const Login = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
 
-    // Trim whitespace from inputs
     const trimmedLoginId = loginId.trim();
     const trimmedPassword = password.trim();
 
-    let user = null;
+    try {
+      const user = await loginUser(trimmedLoginId, trimmedPassword, role);
 
-    if (role === "doctor") {
-      user = doctors.find(
-        (doc) => doc.loginId === trimmedLoginId && doc.password === trimmedPassword
-      );
-    } else if (role === "administrator") {
-      user = administrators.find(
-        (admin) => admin.loginId === trimmedLoginId && admin.password === trimmedPassword
-      );
-    } else {
-      user = patients.find(
-        (p) => p.loginId === trimmedLoginId && p.password === trimmedPassword
-      );
+      if (!user) {
+        setError("Invalid Login ID or Password!");
+        return;
+      }
+
+      // ✅ Save login to localStorage
+      localStorage.setItem("user", JSON.stringify({ ...user, role }));
+
+      // ✅ Navigate based on role
+      setTimeout(() => {
+        if (role === "doctor") navigate("/doctor");
+        else if (role === "administrator") navigate("/admin");
+        else navigate("/dashboard");
+      }, 800);
+    } catch (err) {
+      console.error("Login failed:", err);
+      setError("Unable to connect to backend. Please try again.");
     }
-
-    if (!user) {
-      setError("Invalid Login ID or Password!");
-      return;
-    }
-
-    localStorage.setItem("user", JSON.stringify({ ...user, role }));
-
-    setTimeout(() => {
-      if (role === "doctor") navigate("/doctor");
-      else if (role === "administrator") navigate("/admin");
-      else navigate("/dashboard");
-    }, 800);
   };
 
-  // ✅ Your background GIF
   const bgUrl =
     "https://cdn.dribbble.com/userupload/23002793/file/original-3f028f30f7f023f692a0d341f2ca3741.gif";
 
   return (
     <div className="auth-page min-h-screen flex flex-col lg:flex-row overflow-hidden">
-      {/* LEFT SIDE - QUOTE SECTION */}
+      {/* LEFT SIDE */}
       <motion.div
         initial={{ opacity: 0, x: -50 }}
         animate={{ opacity: 1, x: 0 }}
@@ -73,20 +64,16 @@ const Login = () => {
         </div>
       </motion.div>
 
-      {/* RIGHT SIDE - LOGIN SECTION WITH BLURRED BACKGROUND */}
+      {/* RIGHT SIDE */}
       <motion.div
         initial={{ opacity: 0, x: 60 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.8 }}
         className="flex-1 flex items-center justify-center relative bg-cover bg-center overflow-hidden"
-        style={{
-          backgroundImage: `url("${bgUrl}")`,
-        }}
+        style={{ backgroundImage: `url("${bgUrl}")` }}
       >
-        {/* ✅ Soft white translucent blur overlay */}
         <div className="absolute inset-0 bg-white/70 backdrop-blur-[10px]"></div>
 
-        {/* LOGIN CARD */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -162,7 +149,7 @@ const Login = () => {
             </motion.button>
           </form>
 
-          {/* ✅ Register link for patients only */}
+          {/* Register link for patients only */}
           {role === "patient" && (
             <p className="text-center text-gray-600 mt-4">
               Don’t have an account?{" "}
