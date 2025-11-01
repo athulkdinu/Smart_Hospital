@@ -1,6 +1,6 @@
 import React from 'react'
 import Sidebar from './Sidebar'
-import Header from './Header'
+import DashboardHeader from './DashboardHeader'
 import DashboardBody from './DashboardBody'
 
 function AdminDashboard() {

@@ -38,3 +38,13 @@ export const deletePatientAPI = async (id) => {
     return await commonAPI("DELETE", `${BASEURL}/doctors/${id}`)
 }
 
+
+
+export const getAllAppointmentAPI = () =>
+  commonAPI("GET", `${BASEURL}/appointments`, "");
+
+export const deleteAppointmentAPI = (id) =>
+  commonAPI("DELETE", `${BASEURL}/appointments/${id}`, "");
+
+export const updateAppointmentApi = (id, data) =>
+  commonAPI("PUT", `${BASEURL}/appointments/${id}`, data);

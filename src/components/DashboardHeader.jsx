@@ -7,7 +7,7 @@ import {
   faCaretDown,
 } from "@fortawesome/free-solid-svg-icons";
 
-const Header = () => {
+const DashboardHeader = () => {
     const handleInput=(e)=>{
         console.log(e.target.value)
     }
@@ -55,4 +55,4 @@ const Header = () => {
   );
 };
 
-export default Header;
+export default DashboardHeader;

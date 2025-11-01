@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faUserInjured,
@@ -14,40 +14,90 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  BarChart,
+  Bar,
 } from "recharts";
+import {
+  getAllPatientAPI,
+  getAllDoctorAPI,
+  getAllAppointmentAPI,
+} from "../services/allAPI";
 
 const DashboardBody = () => {
-  const data = [
-    { month: "Jan", patients: 120 },
-    { month: "Feb", patients: 150 },
-    { month: "Mar", patients: 90 },
-    { month: "Apr", patients: 170 },
-    { month: "May", patients: 130 },
-    { month: "Jun", patients: 200 },
-  ];
+  const [patients, setPatients] = useState([]);
+  const [doctors, setDoctors] = useState([]);
+  const [appointments, setAppointments] = useState([]);
+
+  // ✅ Fetch data
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [patientsRes, doctorsRes, appointmentsRes] = await Promise.all([
+          getAllPatientAPI(),
+          getAllDoctorAPI(),
+          getAllAppointmentAPI(),
+        ]);
+
+        if (patientsRes.status === 200) setPatients(patientsRes.data);
+        if (doctorsRes.status === 200) setDoctors(doctorsRes.data);
+        if (appointmentsRes.status === 200) setAppointments(appointmentsRes.data);
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // ✅ Computed Stats
+  const totalPatients = patients.length;
+  const activeDoctors = doctors.filter((d) => d.available).length;
+  const totalAppointments = appointments.length;
+
+  const today = new Date().toISOString().split("T")[0];
+  const todaysAppointments = appointments.filter((a) => a.date === today).length;
+
+  // ✅ Data for Charts
+  const appointmentsByDoctor = doctors.map((doc) => ({
+    name: doc.name,
+    appointments: appointments.filter((a) => a.doctorId === doc.id).length,
+  }));
+
+  // Sort by appointment count (for neatness)
+  appointmentsByDoctor.sort((a, b) => b.appointments - a.appointments);
+
+  const appointmentsOverTime = appointments.map((a) => ({
+    date: a.date,
+    count: appointments.filter((x) => x.date === a.date).length,
+  }));
+
+  // Remove duplicate dates for the line chart
+  const uniqueAppointmentsOverTime = Array.from(
+    new Map(appointmentsOverTime.map((item) => [item.date, item])).values()
+  );
 
   const stats = [
     {
       title: "Total Patients",
-      value: "1,248",
+      value: totalPatients,
       icon: faUserInjured,
       color: "from-blue-500 to-blue-700",
     },
     {
-      title: "Appointments Today",
-      value: "56",
+      title: "Today's Appointments",
+      value: todaysAppointments,
       icon: faCalendarCheck,
       color: "from-green-500 to-green-700",
     },
     {
-      title: "Revenue",
-      value: "₹3.2L",
+      title: "Total Appointments",
+      value: totalAppointments,
       icon: faRupeeSign,
       color: "from-yellow-500 to-yellow-700",
     },
     {
       title: "Active Doctors",
-      value: "24",
+      value: activeDoctors,
       icon: faStethoscope,
       color: "from-purple-500 to-purple-700",
     },
@@ -57,7 +107,7 @@ const DashboardBody = () => {
     <div className="p-6 bg-gray-100 min-h-screen">
       <h2 className="text-2xl font-semibold mb-6 text-gray-800">Dashboard</h2>
 
-      {/* Stats Cards */}
+      {/* ✅ Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {stats.map((item, index) => (
           <div
@@ -75,26 +125,45 @@ const DashboardBody = () => {
         ))}
       </div>
 
-      {/* Chart */}
-      <div className="bg-white p-6 rounded-xl shadow-md">
-        <h3 className="text-lg font-semibold mb-4 text-gray-700">
-          Patient Trends (Last 6 Months)
-        </h3>
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="month" />
-            <YAxis />
-            <Tooltip />
-            <Line
-              type="monotone"
-              dataKey="patients"
-              stroke="#2563EB"
-              strokeWidth={3}
-              dot={{ r: 5 }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+      {/* ✅ Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Line Chart – Appointments Over Time */}
+        <div className="bg-white p-6 rounded-xl shadow-md">
+          <h3 className="text-lg font-semibold mb-4 text-gray-700">
+            Appointments Over Time
+          </h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={uniqueAppointmentsOverTime}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="date" />
+              <YAxis allowDecimals={false} />
+              <Tooltip />
+              <Line
+                type="monotone"
+                dataKey="count"
+                stroke="#2563EB"
+                strokeWidth={3}
+                dot={{ r: 5 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Bar Chart – Appointments per Doctor */}
+        <div className="bg-white p-6 rounded-xl shadow-md">
+          <h3 className="text-lg font-semibold mb-4 text-gray-700">
+            Appointments by Doctor
+          </h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={appointmentsByDoctor}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis allowDecimals={false} />
+              <Tooltip />
+              <Bar dataKey="appointments" fill="#10B981" barSize={40} radius={6} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       </div>
     </div>
   );

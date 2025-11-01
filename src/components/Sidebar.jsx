@@ -18,6 +18,7 @@ const Sidebar = () => {
     { name: "Dashboard", icon: faHome, path: "/" },
     { name: "Patients", icon: faUser, path: "/patient" },
     { name: "Doctors", icon: faUserDoctor, path: "/doctor" },
+    { name: "Appointments", icon: faUserDoctor, path: "/appointments" },
   ];
 
   return (

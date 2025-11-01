@@ -131,7 +131,7 @@ const PatientDashboard = () => {
 
       {/* Edit Modal */}
       {editPatient && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center">
+        <div className="fixed inset-0 backdrop-blur-sm bg-white/30 flex items-center justify-center">
           <div className="bg-white p-6 rounded-xl w-96 shadow-lg relative">
             <button
               className="absolute top-3 right-3 text-gray-500 hover:text-red-500"
