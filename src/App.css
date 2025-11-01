@@ -1,4 +1,21 @@
-/* .input-style {
-  @apply w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700
-         bg-gray-50 dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400;
-} */
+/* 🌿 Center and clean layout */
+body {
+  background-color: #f0fdf4;
+  margin: 0;
+  padding: 0;
+  font-family: "Poppins", sans-serif;
+  overflow: hidden;
+}
+
+/* App root center */
+#root {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+/* Global animation smoothing */
+* {
+  transition: all 0.25s ease-in-out;
+}
