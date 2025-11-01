@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import Layout from '../components/Layout'
 import SymptomButton from '../components/SymptomButton'
 import DoctorCard from '../components/DoctorCard'
-import ChatBotPlaceholder from '../components/ChatBotPlaceholder'
+import BotpressChatbot from '../components/BotpressChatbot'
 import { Link, useNavigate } from 'react-router-dom'
 import StatCard from '../components/StatCard'
 import FilterPill from '../components/FilterPill'
@@ -304,7 +304,7 @@ function Dashboard() {
             </motion.div>
 
             <div className="md:col-span-2">
-              <ChatBotPlaceholder />
+              <BotpressChatbot />
             </div>
           </motion.section>
 

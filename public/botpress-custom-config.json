@@ -1,0 +1,59 @@
+{
+  "botId": "",
+  "botName": "My Hospital Bot",
+  "botAvatar": "https://yourdomain.com/logo.png",
+  "userAvatar": "",
+  "composerPlaceholder": "Type a message...",
+  "userId": "",
+  "conversationId": "",
+  "locale": "en",
+  "primaryColor": "#1E90FF",
+  "secondaryColor": "#00CED1",
+  "backgroundColor": "#F5F5F5",
+  "textColorOnPrimaryColor": "#FFFFFF",
+  "fontFamily": "Arial, sans-serif",
+  "headerFontFamily": "Helvetica, sans-serif",
+  "showPoweredBy": false,
+  "allowFileUpload": true,
+  "showTimestamp": true,
+  "layout": {
+    "width": "350px",
+    "height": "500px"
+  },
+  "composer": {
+    "placeholder": "Type a message...",
+    "fileUpload": true,
+    "voiceMessage": false
+  },
+  "header": {
+    "title": "My Hospital Bot",
+    "subtitle": "",
+    "avatar": "https://yourdomain.com/logo.png",
+    "showAvatar": true,
+    "showTimestamp": true
+  },
+  "theme": {
+    "primaryColor": "#1E90FF",
+    "secondaryColor": "#00CED1",
+    "backgroundColor": "#F5F5F5",
+    "fontFamily": "Arial, sans-serif",
+    "headerFontFamily": "Helvetica, sans-serif",
+    "botMessage": {
+      "backgroundColor": "#E0F7FA",
+      "textColor": "#000000",
+      "borderRadius": "12px"
+    },
+    "userMessage": {
+      "backgroundColor": "#DCF8C6",
+      "textColor": "#000000",
+      "borderRadius": "12px"
+    },
+    "header": {
+      "backgroundColor": "#1E90FF",
+      "textColor": "#FFFFFF"
+    }
+  },
+  "additionalStylesheetUrl": "",
+  "customCss": "body { font-family: Arial, sans-serif !important; } .bp-widget-header { font-family: Helvetica, sans-serif !important; background-color: #1E90FF !important; color: #FFFFFF !important; } .bp-widget-container { background-color: #F5F5F5 !important; width: 350px !important; height: 500px !important; border-radius: 12px !important; } .bp-message-bot { background-color: #E0F7FA !important; border-radius: 12px !important; } .bp-message-user { background-color: #DCF8C6 !important; border-radius: 12px !important; } .bp-composer { background-color: #F5F5F5 !important; } .bp-button { background-color: #1E90FF !important; } .bp-button:hover { background-color: #00CED1 !important; }"
+}
+
