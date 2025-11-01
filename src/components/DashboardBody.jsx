@@ -112,7 +112,7 @@ const DashboardBody = () => {
         {stats.map((item, index) => (
           <div
             key={index}
-            className={`p-5 rounded-xl bg-gradient-to-br ${item.color} text-white shadow-md flex items-center gap-4`}
+            className={`p-5 rounded-xl bg-linear-to-br ${item.color} text-white shadow-md flex items-center gap-4`}
           >
             <div className="bg-white/20 p-3 rounded-lg">
               <FontAwesomeIcon icon={item.icon} size="2x" />

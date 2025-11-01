@@ -25,7 +25,7 @@ const Sidebar = () => {
     <motion.div
       animate={{ width: isOpen ? 220 : 80 }}
       transition={{ duration: 0.4, type: "tween" }}
-      className="h-screen bg-linear-to-b from-gray-900 to-gray-800 text-gray-200 flex flex-col shadow-lg"
+      className=" bg-linear-to-b from-gray-900 to-gray-800 text-gray-200 flex flex-col shadow-lg "
     >
       {/* Header / Toggle */}
       <div className="flex items-center justify-between p-4 border-b border-gray-700">
