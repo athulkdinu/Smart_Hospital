@@ -1,32 +1,54 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate, Link } from "react-router-dom";
+import { doctors, administrators, patients } from "../data/fakeData";
 // import toast, { Toaster } from "react-hot-toast";
 
 const Login = () => {
-  const [role, setRole] = useState("Patient");
+  const [role, setRole] = useState("patient");
   const [loginId, setLoginId] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const navigate = useNavigate();
-
-  const fakeUsers = {
-    Patient: [{ id: "athul", password: "12345", name: "Athul" }],
-    Doctor: [{ id: "doctor1", password: "doc123", name: "Dr. Aisha Khan" }],
-    Admin: [{ id: "admin", password: "admin123", name: "Administrator" }],
-  };
 
   const handleLogin = (e) => {
     e.preventDefault();
-    const users = fakeUsers[role] || [];
-    const user = users.find(
-      (u) => u.id === loginId.trim() && u.password === password.trim()
-    );
-    if (user) {
-      toast.success(`Welcome ${user.name}! Redirecting...`);
-      setTimeout(() => navigate("/dashboard"), 900);
+    setError("");
+
+    const trimmedLoginId = loginId.trim();
+    const trimmedPassword = password.trim();
+
+    let user = null;
+
+    if (role === "doctor") {
+      user = doctors.find(
+        (doc) => doc.loginId === trimmedLoginId && doc.password === trimmedPassword
+      );
+    } else if (role === "administrator") {
+      user = administrators.find(
+        (admin) =>
+          admin.loginId === trimmedLoginId && admin.password === trimmedPassword
+      );
     } else {
-      toast.error("Invalid Login ID or Password!");
+      user = patients.find(
+        (p) => p.loginId === trimmedLoginId && p.password === trimmedPassword
+      );
     }
+
+    if (!user) {
+      // toast.error("Invalid Login ID or Password!");
+      setError("Invalid Login ID or Password!");
+      return;
+    }
+
+    // toast.success(`Welcome ${user.name}! Redirecting...`);
+    localStorage.setItem("user", JSON.stringify({ ...user, role }));
+
+    setTimeout(() => {
+      if (role === "doctor") navigate("/doctor");
+      else if (role === "administrator") navigate("/admin");
+      else navigate("/dashboard");
+    }, 800);
   };
 
   const bgUrl =
@@ -36,15 +58,17 @@ const Login = () => {
     <div
       className="login-page min-h-screen flex items-center justify-center relative overflow-hidden"
       style={{
-        backgroundColor: "#FEF3C7", // warm fallback color
+        backgroundColor: "#FEF3C7",
         backgroundImage: `url("${bgUrl}")`,
         backgroundRepeat: "no-repeat",
         backgroundSize: "cover",
         backgroundPosition: "center center",
       }}
     >
+      {/* Frosted overlay */}
       <div className="absolute inset-0 bg-emerald-200/30 backdrop-blur-sm"></div>
 
+      {/* Floating background elements */}
       <motion.div
         className="absolute rounded-full bg-emerald-300/30 blur-3xl w-72 h-72 -left-20 -top-20"
         animate={{ x: [0, 40, -20, 0], y: [0, 20, -10, 0] }}
@@ -56,6 +80,7 @@ const Login = () => {
         transition={{ repeat: Infinity, duration: 14, ease: "easeInOut" }}
       />
 
+      {/* Login Card */}
       <motion.div
         initial={{ opacity: 0, scale: 0.9, y: 40 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -70,6 +95,7 @@ const Login = () => {
         </p>
 
         <form onSubmit={handleLogin} className="space-y-4">
+          {/* Role selector */}
           <div className="relative">
             <label
               htmlFor="role"
@@ -88,9 +114,9 @@ const Login = () => {
                 onChange={(e) => setRole(e.target.value)}
                 className="custom-select w-full border border-gray-200 bg-white/60 backdrop-blur-sm rounded-md p-3 text-gray-700 font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 appearance-none"
               >
-                <option>Patient</option>
-                <option>Doctor</option>
-                <option>Admin</option>
+                <option value="patient">Patient</option>
+                <option value="doctor">Doctor</option>
+                <option value="administrator">Administrator</option>
               </select>
 
               {/* Dropdown arrow */}
@@ -103,29 +129,41 @@ const Login = () => {
                   strokeWidth={2}
                   stroke="currentColor"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M19 9l-7 7-7-7"
+                  />
                 </svg>
               </div>
             </motion.div>
           </div>
 
-
+          {/* Login ID */}
           <input
             type="text"
             placeholder="Login ID"
             value={loginId}
             onChange={(e) => setLoginId(e.target.value)}
-            className="w-full border border-gray-200 rounded-md p-3 focus:ring-2 focus:ring-emerald-400"
+            className="styled-input"
+            required
           />
 
+          {/* Password */}
           <input
             type="password"
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full border border-gray-200 rounded-md p-3 focus:ring-2 focus:ring-emerald-400"
+            className="styled-input"
+            required
           />
 
+          {error && (
+            <p className="text-red-500 text-sm text-center">{error}</p>
+          )}
+
+          {/* Submit */}
           <motion.button
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
@@ -136,15 +174,18 @@ const Login = () => {
           </motion.button>
         </form>
 
-        <p className="text-center text-gray-600 mt-4">
-          Don’t have an account?{" "}
-          <Link
-            to="/register"
-            className="text-emerald-600 font-semibold hover:underline"
-          >
-            Register here
-          </Link>
-        </p>
+        {/* Register link */}
+        {role === "patient" && (
+          <p className="text-center text-gray-600 mt-4">
+            Don’t have an account?{" "}
+            <Link
+              to="/register"
+              className="text-emerald-600 font-semibold hover:underline"
+            >
+              Register here
+            </Link>
+          </p>
+        )}
       </motion.div>
 
       {/* <Toaster position="top-center" /> */}
