@@ -1,145 +1,21 @@
-/* 🌈 General page background overlay (for gif/video backgrounds) */
-.page-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(255, 255, 255, 0.45);
-  backdrop-filter: blur(18px);
-  z-index: 1;
-}
-
-/* 🧊 Glass card (for login/register containers) */
-.card-glass {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(20px);
-  border-radius: 1.25rem;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  transition: all 0.3s ease;
-}
-
-.card-glass:hover {
-  box-shadow: 0 8px 50px rgba(16, 185, 129, 0.3);
-  transform: translateY(-3px);
-}
-
-/* ✨ Glowing input style */
-.styled-input {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  border-radius: 0.5rem;
-  border: 1px solid rgba(209, 213, 219, 0.6);
-  background-color: rgba(255, 255, 255, 0.7);
-  box-shadow: 0 0 8px rgba(16, 185, 129, 0.15);
-  transition: all 0.3s ease;
-  outline: none;
-  color: #064e3b;
-  font-weight: 500;
-}
-
-.styled-input::placeholder {
-  color: rgba(107, 114, 128, 0.7);
-}
-
-.styled-input:focus {
-  border-color: #10b981;
-  box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
-  background-color: rgba(255, 255, 255, 0.9);
-}
-
-/* 🧭 Dropdown (select) styling */
-.custom-select {
-  transition: all 0.25s ease-in-out;
-  cursor: pointer;
-  appearance: none;
-}
-
-.custom-select option {
-  background-color: #ecfdf5;
-  color: #064e3b;
-  font-weight: 500;
-  padding: 8px;
-}
-
-.custom-select:hover {
-  box-shadow: 0 0 8px rgba(16, 185, 129, 0.25);
-}
-
-/* 💡 Button with subtle glow */
-button {
-  transition: all 0.3s ease;
-}
-
-button:hover {
-  box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
-  transform: translateY(-2px);
-}
-
-/* 🌐 Register form grid layout */
-.register-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1.25rem;
-}
-
-.register-grid .col-span-2 {
-  grid-column: span 2;
-}
-
-/* 📱 Responsive layout for small screens */
-@media (max-width: 768px) {
-  .register-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .register-grid .col-span-2 {
-    grid-column: span 1;
-  }
-
-  .card-glass {
-    padding: 1.5rem;
-    width: 90%;
-  }
-}
-
-/* 🌟 Typography */
-h1,
-h2,
-h3,
-h4 {
+/* 🌿 Center and clean layout */
+body {
+  background-color: #f0fdf4;
+  margin: 0;
+  padding: 0;
   font-family: "Poppins", sans-serif;
+  overflow: hidden;
 }
 
-p,
-label,
-input,
-select,
-textarea {
-  font-family: "Inter", sans-serif;
+/* App root center */
+#root {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
 }
 
-/* 🌊 Scrollbar style (optional aesthetic improvement) */
-::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #10b981, #34d399);
-  border-radius: 10px;
-}
-
-/* 🫧 Subtle floating animation for background decorations */
-@keyframes float {
-  0% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-  100% {
-    transform: translateY(0px);
-  }
-}
-
-.floating {
-  animation: float 4s ease-in-out infinite;
+/* Global animation smoothing */
+* {
+  transition: all 0.25s ease-in-out;
 }

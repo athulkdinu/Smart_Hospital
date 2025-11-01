@@ -33,18 +33,25 @@ function Dashboard() {
         setLoading(true)
         setError('')
         const data = await getAllDoctors()
-        if (!cancelled && Array.isArray(data)) {
-          const mapped = data.map(d => ({
-            id: d.id,
-            name: d.name,
-            department: d.specialization || 'General Medicine',
-            available: true,
-            tags: []
-          }))
-          setDoctors(mapped)
+        if (!cancelled) {
+          if (Array.isArray(data) && data.length > 0) {
+            const mapped = data.map(d => ({
+              id: d.id,
+              name: d.name,
+              department: d.specialization || 'General Medicine',
+              available: true,
+              tags: []
+            }))
+            setDoctors(mapped)
+          } else if (data === null || (Array.isArray(data) && data.length === 0)) {
+            setError('No doctors available. Please check if the backend server is running on http://localhost:3000')
+          }
         }
       } catch (e) {
-        if (!cancelled) setError('Failed to load doctors')
+        if (!cancelled) {
+          console.error('Fetch doctors error:', e)
+          setError('Failed to load doctors. Please check if the backend server is running.')
+        }
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -280,5 +287,3 @@ function Dashboard() {
 }
 
 export default Dashboard
-
-

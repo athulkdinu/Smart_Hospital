@@ -6,6 +6,14 @@ import { getAllDoctors } from '../services/doctorApi'
 import { getAllAppointments } from '../services/appointmentApi'
 
 function Appointments() {
+  const storedUser = useMemo(() => {
+    try {
+      return JSON.parse(localStorage.getItem('user') || 'null')
+    } catch {
+      return null
+    }
+  }, [])
+
   const [availableDoctors, setAvailableDoctors] = useState([])
 
   const [selectedDoctorId, setSelectedDoctorId] = useState('')
@@ -30,32 +38,53 @@ function Appointments() {
           getAllDoctors(),
           getAllAppointments()
         ])
-        if (!cancelled && Array.isArray(docs)) {
-          const mappedDocs = docs.map(d => ({
-            id: d.id,
-            name: d.name,
-            department: d.specialization || 'General Medicine',
-            available: true
-          }))
-          setAvailableDoctors(mappedDocs)
-        }
-        if (!cancelled && Array.isArray(appts)) {
-          const doctorIdToName = new Map((docs || []).map(d => [String(d.id), d.name]))
-          const now = new Date()
-          const normalized = appts.map(a => ({
-            id: a.id,
-            date: a.date,
-            time: a.time,
-            doctor: doctorIdToName.get(String(a.doctorId)) || `Doctor #${a.doctorId}`,
-            type: 'Consultation'
-          }))
-          const upcomingList = normalized.filter(a => new Date(a.date) >= now)
-          const previousList = normalized.filter(a => new Date(a.date) < now)
-          setUpcoming(upcomingList)
-          setPrevious(previousList)
+        if (!cancelled) {
+          if (Array.isArray(docs) && docs.length > 0) {
+            const mappedDocs = docs.map(d => ({
+              id: d.id,
+              name: d.name,
+              department: d.specialization || 'General Medicine',
+              available: true
+            }))
+            setAvailableDoctors(mappedDocs)
+          } else if (docs === null || (Array.isArray(docs) && docs.length === 0)) {
+            setError('No doctors available. Please check if the backend server is running.')
+          }
+          
+          if (Array.isArray(appts)) {
+            const doctorIdToName = new Map((docs || []).map(d => [String(d.id), d.name]))
+            const now = new Date()
+            // Filter appointments by logged-in patient if user is a patient
+            let filteredAppts = appts
+            if (storedUser?.role === 'patient' && storedUser?.id) {
+              filteredAppts = appts.filter(a => String(a.patientId) === String(storedUser.id))
+            }
+            const normalized = filteredAppts.map(a => ({
+              id: a.id,
+              date: a.date,
+              time: a.time,
+              doctor: doctorIdToName.get(String(a.doctorId)) || `Doctor #${a.doctorId}`,
+              type: 'Consultation'
+            }))
+            const upcomingList = normalized.filter(a => {
+              const apptDate = new Date(a.date)
+              return !isNaN(apptDate.getTime()) && apptDate >= now
+            })
+            const previousList = normalized.filter(a => {
+              const apptDate = new Date(a.date)
+              return !isNaN(apptDate.getTime()) && apptDate < now
+            })
+            setUpcoming(upcomingList)
+            setPrevious(previousList)
+          } else if (appts === null) {
+            setError('Failed to load appointments. Please check if the backend server is running on http://localhost:3000')
+          }
         }
       } catch (e) {
-        if (!cancelled) setError('Failed to load appointments')
+        if (!cancelled) {
+          console.error('Fetch error:', e)
+          setError('Failed to load data. Please check if the backend server is running.')
+        }
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -64,7 +93,7 @@ function Appointments() {
     const onFocus = () => fetchAll()
     window.addEventListener('focus', onFocus)
     return () => { cancelled = true; window.removeEventListener('focus', onFocus) }
-  }, [])
+  }, [storedUser])
 
   const selectedDoctor = useMemo(
     () => availableDoctors.find(d => String(d.id) === String(selectedDoctorId)),

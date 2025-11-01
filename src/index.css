@@ -1,86 +1,69 @@
 @import "tailwindcss";
-/* .input-style {
-  @apply w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700
-         bg-gray-50 dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400;
-} */
-/* In index.css */
-.bg-overlay::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(120deg, rgba(0,255,220,0.15), rgba(0,150,255,0.15));
-  mix-blend-mode: overlay;
-  animation: gradientMove 6s infinite alternate ease-in-out;
+
+/* 🌿 Global look */
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+  font-family: "Poppins", sans-serif;
+  background-color: #f0fdf4;
 }
 
-@keyframes gradientMove {
-  from { transform: translateX(-10%) translateY(-10%); }
-  to { transform: translateX(10%) translateY(10%); }
-}
-/* Add these in your CSS file (e.g., src/index.css or App.css) */
-
-/* Gradient Text */
-.text-gradient {
-  background: linear-gradient(to right, #059669, #14b8a6);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+/* ✨ Input, textarea, and select */
+input,
+textarea,
+select {
+  @apply w-full px-5 py-3 text-gray-800 bg-white border border-gray-300 rounded-xl shadow-sm transition-all duration-300 ease-in-out;
+  font-size: 1rem;
+  min-height: 48px;
 }
 
-/* Smooth background overlay motion */
-@keyframes gradientMove {
-  0% {
-    transform: translate(-10px, -10px);
-  }
-  100% {
-    transform: translate(10px, 10px);
-  }
-}
-.animate-gradientMove {
-  animation: gradientMove 6s ease-in-out infinite alternate;
+/* 🏠 Address smaller to fit viewport */
+textarea {
+  min-height: 70px;
+  resize: none;
 }
 
-/* Input & select focus glow */
+/* 🎨 Focus animation */
 input:focus,
+textarea:focus,
 select:focus {
+  @apply border-emerald-500 ring-2 ring-emerald-300;
+  transform: scale(1.02);
   box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
-  outline: none;
+  background-color: rgba(255, 255, 255, 0.98);
 }
 
-/* Button hover glow */
-button:hover {
-  box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+/* 🪩 Select dropdown look */
+select {
+  @apply appearance-none bg-white pr-10;
+  background-image: linear-gradient(45deg, transparent 50%, #10b981 50%),
+    linear-gradient(135deg, #10b981 50%, transparent 50%);
+  background-position: calc(100% - 1.3em) calc(1.4em),
+    calc(100% - 0.9em) calc(1.4em);
+  background-size: 8px 8px, 8px 8px;
+  background-repeat: no-repeat;
 }
 
-/* Toast theme (match MediConnect) */
-:root {
-  --toastify-color-success: #10b981;
-  --toastify-color-error: #ef4444;
-}
-/* Custom dropdown styling */
-.custom-select {
-  background-color: rgba(255, 255, 255, 0.8);
-  transition: all 0.25s ease-in-out;
-}
-
-/* When focused */
-.custom-select:focus {
-  box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
-}
-
-/* Dropdown options styling (browser-dependent but helps in most cases) */
-.custom-select option {
-  background-color: #ecfdf5; /* emerald-50 tone */
-  color: #064e3b; /* emerald-900 tone */
+select option {
+  background-color: #ecfdf5;
+  color: #064e3b;
   font-weight: 500;
-  padding: 10px;
 }
 
-/* Smooth focus glow */
-.custom-select:hover {
-  box-shadow: 0 0 8px rgba(16, 185, 129, 0.25);
+/* 🌈 Buttons */
+button {
+  @apply font-semibold rounded-xl py-3 px-6 bg-emerald-500 text-white shadow-md transition-all duration-300 ease-in-out;
 }
 
-/* Rounded corner for dropdown */
-select::-ms-expand {
-  display: none;
+button:hover {
+  @apply bg-emerald-600;
+  transform: scale(1.03);
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.35);
+}
+
+/* 🧭 Form layout fix: remove scroll */
+form {
+  max-height: none !important;
+  overflow: visible !important;
 }
