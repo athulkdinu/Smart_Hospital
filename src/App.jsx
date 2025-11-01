@@ -1,15 +1,5 @@
-<<<<<<< HEAD
-import React from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
-import Dashboard from "./pages/Dashboard";
-import Profile from "./pages/Profile";
-import Appointments from "./pages/Appointments";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import Landing from "./pages/Landing";
-=======
 import React from 'react'
-import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
+import {  Route, Routes, Navigate } from "react-router-dom";
 import Dashboard from './pages/Dashboard'
 import Profile from './pages/Profile'
 import Appointments from './pages/Appointments'
@@ -20,7 +10,6 @@ import MyPatientsPage from './pages/MyPatientsPage'
 import DrProfilePage from './pages/Dr_Profile_Page'
 import Landing from "./pages/Landing"; // 👈 import Landing page
 import AdminDashoard from './components/AdminDashboard'
->>>>>>> Suryajith
 
 function App() {
   const user = JSON.parse(localStorage.getItem("user"));
