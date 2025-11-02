@@ -44,3 +44,10 @@ export const deleteAppointmentAPI = (id) =>
 
 export const updateAppointmentApi = (id, data) =>
   adminAPI("PUT", `${BASEURL}/appointments/${id}`, data);
+
+// ----------------- Tokens -----------------
+
+export const getAllTokenAPI = () =>
+  adminAPI("GET", `${BASEURL}/tokens`, "");
+
+// ----------------- Admin Login -----------------

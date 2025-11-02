@@ -2,23 +2,18 @@ import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faHome,
-  faUser,
-  faCog,
-  faBars,
-  faUserDoctor,
-} from "@fortawesome/free-solid-svg-icons";
+import { faHome, faUser, faCog, faBars, faUserDoctor, faCalendarCheck, faClipboardCheck, } from "@fortawesome/free-solid-svg-icons";
 
-const Sidebar = () => {
+const Sidebar = ({ setElement }) => {
   const [isOpen, setIsOpen] = useState(true);
   const location = useLocation();
 
   const menuItems = [
-    { name: "Dashboard", icon: faHome, path: "/" },
-    { name: "Patients", icon: faUser, path: "/patient" },
-    { name: "Doctors", icon: faUserDoctor, path: "/doctor" },
-    { name: "Appointments", icon: faUserDoctor, path: "/appointments" },
+    { name: "Dashboard", icon: faHome, path: "body" },
+    { name: "Patients", icon: faUser, path: "patient" },
+    { name: "Doctors", icon: faUserDoctor, path: "doctor" },
+    { name: "Appointments", icon: faCalendarCheck, path: "appointments" },
+    { name: "Tokens", icon: faClipboardCheck, path: "tokens" },
   ];
 
   return (
@@ -57,14 +52,13 @@ const Sidebar = () => {
         {menuItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (
-            <Link
-              to={item.path}
+            <button
+              onClick={()=>setElement(item.path)}
               key={item.name}
-              className={`flex items-center gap-4 px-4 py-3 rounded-md transition-all duration-200 ${
-                isActive
+              className={`flex items-center gap-4 px-4 py-3 rounded-md transition-all duration-200 ${isActive
                   ? "bg-blue-600 text-white"
                   : "text-gray-300 hover:bg-gray-700 hover:text-white"
-              }`}
+                }`}
             >
               <motion.div whileHover={{ scale: 1.1 }}>
                 <FontAwesomeIcon icon={item.icon} size="lg" />
@@ -85,7 +79,7 @@ const Sidebar = () => {
                   </motion.span>
                 )}
               </AnimatePresence>
-            </Link>
+            </button>
           );
         })}
       </nav>

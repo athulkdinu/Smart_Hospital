@@ -1,27 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faUserInjured,
-  faCalendarCheck,
-  faRupeeSign,
-  faStethoscope,
-} from "@fortawesome/free-solid-svg-icons";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-} from "recharts";
-import {
-  getAllPatientAPI,
-  getAllDoctorAPI,
-  getAllAppointmentAPI,
-} from "../services/allAPI";
+import { faUserInjured, faCalendarCheck, faRupeeSign, faStethoscope, } from "@fortawesome/free-solid-svg-icons";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, } from "recharts";
+import { getAllPatientAPI, getAllDoctorAPI, getAllAppointmentAPI, } from "../services/allAPI";
 
 const DashboardBody = () => {
   const [patients, setPatients] = useState([]);
