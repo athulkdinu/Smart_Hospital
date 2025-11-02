@@ -12,7 +12,7 @@ const DashboardHeader = () => {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   return (
-    <header className="fixed top-0 left-0 right-0 h-16 bg-gradient-to-r from-gray-900/95 to-gray-800/95 backdrop-blur-lg border-b border-gray-700 text-gray-100 flex items-center justify-between px-6 shadow-lg z-50">
+    <header className="fixed top-0 left-0 right-0 h-16 bg-linear-to-r from-gray-900/95 to-gray-800/95 backdrop-blur-lg border-b border-gray-700 text-gray-100 flex items-center justify-between px-6 shadow-lg z-50">
       {/* Left section (Logo / App name) */}
       <div className="flex items-center gap-3">
         <FontAwesomeIcon icon={faBars} className="text-gray-300 text-lg cursor-pointer hover:text-blue-400 transition" />

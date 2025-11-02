@@ -1,23 +1,23 @@
-import React from "react";
-import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
-import Dashboard from "./pages/Dashboard";
-import Profile from "./pages/Profile";
-import Appointments from "./pages/Appointments";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import DoctorDashboard from "./pages/Doctor_Dashboard";
-import MyPatientsPage from "./pages/MyPatientsPage";
-import DrProfilePage from "./pages/Dr_Profile_Page";
-import Landing from "./pages/Landing";
-import AdminDashboard from "./components/AdminDashboard";
+import React from 'react'
+import {  Route, Routes, Navigate } from "react-router-dom";
+import Dashboard from './pages/Dashboard'
+import Profile from './pages/Profile'
+import Appointments from './pages/Appointments'
+import Login from './pages/Login'
+import Register from './pages/Register'
+import DoctorDashboard from './pages/Doctor_Dashboard'
+import MyPatientsPage from './pages/MyPatientsPage'
+import DrProfilePage from './pages/Dr_Profile_Page'
+import Landing from "./pages/Landing"; // 👈 import Landing page
+import AdminDashboard from './components/AdminDashboard'
 
 function App() {
   const user = JSON.parse(localStorage.getItem("user"));
 
   return (
-      <Routes>
-        {/* 👇 Default landing */}
-        <Route path="/" element={<Landing />} />
+    <Routes>
+      {/* Landing Page */}
+      <Route path="/" element={<Landing />} />
 
         {/* Public routes */}
         <Route path="/login" element={<Login />} />
