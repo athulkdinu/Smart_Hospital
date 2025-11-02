@@ -17,7 +17,10 @@ function Appointments() {
     }
   }, [])
 
-  const patientName = storedUser?.role === 'patient' ? (storedUser.name || 'Athul') : 'Athul'
+  // Get name from fullName (patients) or name (doctors/admins)
+  const patientName = storedUser?.role === 'patient' 
+    ? (storedUser.fullName || storedUser.name || 'User') 
+    : (storedUser?.name || 'User')
   const [availableDoctors, setAvailableDoctors] = useState([])
 
   const [selectedDoctorId, setSelectedDoctorId] = useState('')
@@ -121,7 +124,7 @@ function Appointments() {
 
       const appointmentData = {
         patientId: storedUser.id,
-        patientName: storedUser.name || storedUser.email,
+        patientName: storedUser.fullName || storedUser.name || storedUser.email,
         patientEmail: storedUser.email,
         doctorId: parseInt(selectedDoctorId),
         doctorName: doc.name,

@@ -25,8 +25,14 @@ const Login = () => {
         return;
       }
 
-      // ✅ Save login to localStorage
-      localStorage.setItem("user", JSON.stringify({ ...user, role }));
+      // ✅ Save login to localStorage with consistent name field
+      const userToStore = {
+        ...user,
+        role,
+        name: user.fullName || user.name || 'User', // Use fullName for patients, name for doctors/admins
+        id: user.id || user.id
+      };
+      localStorage.setItem("user", JSON.stringify(userToStore));
 
       // ✅ Navigate based on role
       setTimeout(() => {

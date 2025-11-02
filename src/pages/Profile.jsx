@@ -17,7 +17,10 @@ function Profile() {
     }
   }, [])
 
-  const patientName = storedUser?.role === 'patient' ? (storedUser.name || 'Athul') : 'Athul'
+  // Get name from fullName (patients) or name (doctors/admins)
+  const patientName = storedUser?.role === 'patient' 
+    ? (storedUser.fullName || storedUser.name || 'User') 
+    : (storedUser?.name || 'User')
   const [user, setUser] = useState(storedUser)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -42,13 +45,15 @@ function Profile() {
             setUser(prev => ({ 
               ...prev, 
               ...data,
-              name: data.name || prev?.name || storedUser.name || 'Unknown User'
+              fullName: data.fullName || prev?.fullName || storedUser.fullName,
+              name: data.fullName || data.name || prev?.name || storedUser.fullName || storedUser.name || 'Unknown User'
             }))
           } else if (!cancelled) {
             // If API call fails or returns nothing, use stored user data
             setUser(prev => ({
               ...prev,
-              name: prev?.name || storedUser.name || 'Unknown User'
+              fullName: prev?.fullName || storedUser.fullName,
+              name: prev?.fullName || prev?.name || storedUser.fullName || storedUser.name || 'Unknown User'
             }))
           }
         } catch (e) {
@@ -57,7 +62,8 @@ function Profile() {
             // Fallback to stored user data
             setUser(prev => ({
               ...prev,
-              name: prev?.name || storedUser.name || 'Unknown User'
+              fullName: prev?.fullName || storedUser.fullName,
+              name: prev?.fullName || prev?.name || storedUser.fullName || storedUser.name || 'Unknown User'
             }))
           }
         } finally {
@@ -138,7 +144,7 @@ function Profile() {
   }, []) // Only run once on mount
 
   return (
-    <Layout patientName={user?.name || patientName}>
+    <Layout patientName={user?.fullName || user?.name || patientName}>
       <div className="relative min-h-screen bg-gradient-to-br from-emerald-50 via-cyan-50 to-teal-50">
         {/* Background pattern overlay */}
         <div className="absolute inset-0 opacity-40" style={{
@@ -198,10 +204,10 @@ function Profile() {
             >
               <div className="flex flex-col items-center text-center">
                 <div className="h-24 w-24 rounded-full bg-gradient-to-br from-emerald-400 to-cyan-400 border-4 border-emerald-100 flex items-center justify-center text-white font-bold text-3xl shadow-lg mb-4">
-                  {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                  {(user?.fullName || user?.name) ? (user.fullName || user.name).charAt(0).toUpperCase() : 'U'}
                 </div>
                 <div className="mb-4">
-                  <div className="text-xl font-bold text-gray-800 mb-1">{user?.name || 'Unknown User'}</div>
+                    <div className="text-xl font-bold text-gray-800 mb-1">{user?.fullName || user?.name || 'Unknown User'}</div>
                   <div className="text-sm text-gray-600 flex items-center justify-center gap-1">
                     <FontAwesomeIcon icon={faEnvelope} className="text-emerald-500" />
                     {user?.email || 'No email set'}
@@ -252,7 +258,7 @@ function Profile() {
                       <FontAwesomeIcon icon={faUser} className="text-emerald-500" />
                       Full Name
                     </div>
-                    <div className="font-bold text-gray-800">{user?.name || '—'}</div>
+                    <div className="font-bold text-gray-800">{user?.fullName || user?.name || '—'}</div>
                   </div>
                   <div className="rounded-xl border-2 border-emerald-100 bg-emerald-50/30 p-4">
                     <div className="text-xs text-gray-600 font-semibold mb-1 flex items-center gap-1">
@@ -268,10 +274,6 @@ function Profile() {
                   <div className="rounded-xl border-2 border-emerald-100 bg-emerald-50/30 p-4">
                     <div className="text-xs text-gray-600 font-semibold mb-1">Age</div>
                     <div className="font-bold text-gray-800">{user?.age ?? '—'}</div>
-                  </div>
-                  <div className="rounded-xl border-2 border-emerald-100 bg-emerald-50/30 p-4 sm:col-span-2">
-                    <div className="text-xs text-gray-600 font-semibold mb-1">Primary Doctor</div>
-                    <div className="font-bold text-gray-800">{user?.doctor || '—'}</div>
                   </div>
                 </div>
               )}
@@ -372,9 +374,6 @@ function Profile() {
                         </div>
                       )}
                     </div>
-                    <button className="text-sm rounded-xl border-2 border-emerald-500 bg-white hover:bg-emerald-500 hover:text-white px-4 py-2 font-semibold text-emerald-700 transition-all">
-                      View
-                    </button>
                   </motion.div>
                 ))}
               </div>
@@ -444,9 +443,6 @@ function Profile() {
                         </div>
                       )}
                     </div>
-                    <button className="text-sm rounded-xl border-2 border-emerald-500 bg-white hover:bg-emerald-500 hover:text-white px-4 py-2 font-semibold text-emerald-700 transition-all">
-                      View
-                    </button>
                   </motion.div>
                 ))}
               </div>

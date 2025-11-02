@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import axios from "axios";
+import { registerPatient } from "../services/registerAPI";
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -23,18 +23,6 @@ const Register = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // 🧠 Generate loginId dynamically (like PAT001, PAT002)
-  const generateLoginId = async () => {
-    try {
-      const res = await axios.get("http://localhost:5000/patients");
-      const count = res.data.length + 1;
-      return `PAT${String(count).padStart(3, "0")}`;
-    } catch (err) {
-      console.error("Error generating loginId:", err);
-      return `PAT${Math.floor(Math.random() * 1000)}`;
-    }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -42,16 +30,13 @@ const Register = () => {
     setGeneratedId("");
 
     try {
-      const loginId = await generateLoginId();
+      const response = await registerPatient(formData);
 
-      const response = await axios.post("http://localhost:5000/patients", {
-        ...formData,
-        loginId,
-      });
-
-      if (response.status === 201) {
-        setGeneratedId(loginId);
+      if (response && response.loginId) {
+        setGeneratedId(response.loginId);
         setMessage(" Registration successful! Your login details are below:");
+      } else {
+        setError(" Registration failed. Please try again.");
       }
     } catch (err) {
       console.error("Registration error:", err);

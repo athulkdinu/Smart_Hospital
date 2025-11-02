@@ -17,9 +17,31 @@ import { getPrescriptionsByPatientId } from '../services/prescriptionApi'
 function Dashboard() {
   const navigate = useNavigate()
   const storedUser = JSON.parse(localStorage.getItem('user') || 'null')
-  const patientName = storedUser?.role === 'patient' ? storedUser.name : 'Athul'
+  // Get name from fullName (patients) or name (doctors/admins)
+  const patientName = storedUser?.role === 'patient' 
+    ? (storedUser.fullName || storedUser.name || 'User') 
+    : (storedUser?.name || 'User')
   const symptoms = ['Fever', 'Cough', 'Headache', 'Cold', 'Stomachache']
   const categories = ['All', 'General Medicine', 'Pediatrics', 'Neurology', 'Gastroenterology']
+  
+  // Map departments to symptoms
+  const getSymptomsByDepartment = (department) => {
+    const dept = department?.toLowerCase() || ''
+    if (dept.includes('general medicine') || dept.includes('general')) {
+      return ['Fever', 'Cough']
+    } else if (dept.includes('pediatric')) {
+      return ['Cold', 'Fever']
+    } else if (dept.includes('neurology') || dept.includes('neurolog')) {
+      return ['Headache']
+    } else if (dept.includes('gastro') || dept.includes('stomach')) {
+      return ['Stomachache']
+    } else if (dept.includes('cardiology') || dept.includes('cardiac')) {
+      return ['Fever', 'Cough']
+    }
+    // Default symptoms for unknown departments
+    return ['Fever', 'Cough', 'Headache']
+  }
+  
   const [activeSymptom, setActiveSymptom] = useState('')
   const [category, setCategory] = useState('All')
   const [availabilityOnly, setAvailabilityOnly] = useState(false)
@@ -54,13 +76,16 @@ function Dashboard() {
         const data = await getAllDoctors()
         if (!cancelled) {
           if (Array.isArray(data) && data.length > 0) {
-            const mapped = data.map(d => ({
-              id: d.id,
-              name: d.name,
-              department: d.specialization || 'General Medicine',
-              available: true,
-              tags: []
-            }))
+            const mapped = data.map(d => {
+              const department = d.specialization || 'General Medicine'
+              return {
+                id: d.id,
+                name: d.name,
+                department: department,
+                available: true,
+                tags: getSymptomsByDepartment(department)
+              }
+            })
             setDoctors(mapped)
           } else if (data === null || (Array.isArray(data) && data.length === 0)) {
             setError('No doctors available. Please check if the backend server is running on http://localhost:3000')
@@ -156,7 +181,7 @@ function Dashboard() {
         patientId: storedUser.id,
         doctorId: doctor.id,
         doctorName: doctor.name,
-        patientName: storedUser.name || patientName
+        patientName: storedUser.fullName || storedUser.name || patientName
       }
       
       const newToken = await createToken(tokenData)
