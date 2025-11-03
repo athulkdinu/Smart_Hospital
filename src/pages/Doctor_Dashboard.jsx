@@ -6,8 +6,7 @@ import {
   getAllPatientHistory,
   getAllTockens,
 } from "../services/doctor_api";
-import { updateToken } from "../services/tokenApi";
-import PatientHistory from "../components/PatientHistoryModal";
+import PatientHistory from "../components/PatientHistoryModal"; // Make sure this file exists!
 
 const normalizePrescription = (pres) => {
   if (Array.isArray(pres)) return pres;
@@ -149,7 +148,12 @@ export default function DoctorDashboard() {
     try {
       await AddPatientHistory(payload);
       const fresh = await getAllPatientHistory();
-      if (Array.isArray(fresh)) setPatientHistory(fresh);
+      if (Array.isArray(fresh)) {
+        const filtered = fresh.filter(
+          (h) => h.doctorId == doctorId || h.doctorName === doctorName
+        );
+        setPatientHistory(filtered);
+      }
       alert("Prescription saved!");
     } catch (e) {
       console.error(e);
