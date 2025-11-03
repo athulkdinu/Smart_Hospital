@@ -8,7 +8,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import StatCard from '../components/StatCard'
 import FilterPill from '../components/FilterPill'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faClockRotateLeft, faUserDoctor, faBullhorn, faHeartPulse, faBandAid, faMagnifyingGlass, faArrowDownAZ } from '@fortawesome/free-solid-svg-icons'
+import { faClockRotateLeft, faUserDoctor, faBullhorn, faHeartPulse, faBandAid, faMagnifyingGlass, faArrowDownAZ, faCalendarCheck } from '@fortawesome/free-solid-svg-icons'
 import { getAllDoctors } from '../services/doctorApi'
 import { createToken, getTokensByPatientId } from '../services/tokenApi'
 import { getAllAppointments, getAppointmentsByPatientId } from '../services/appointmentApi'
@@ -57,6 +57,12 @@ function Dashboard() {
     prescriptions: 0,
     tokensCount: 0
   })
+  const [tokenNotification, setTokenNotification] = useState({
+    show: false,
+    tokenNumber: null,
+    doctorName: '',
+    tokenId: null
+  })
 
   // Get search term from header if available
   useEffect(() => {
@@ -67,43 +73,60 @@ function Dashboard() {
     }
   }, [])
 
+  // Fetch doctors function
+  const fetchDoctors = React.useCallback(async () => {
+    try {
+      setLoading(true)
+      setError('')
+      const data = await getAllDoctors()
+      if (Array.isArray(data) && data.length > 0) {
+        const mapped = data.map(d => {
+          const department = d.specialization || 'General Medicine'
+          return {
+            id: d.id,
+            name: d.name,
+            department: department,
+            available: d.available !== undefined ? d.available : true,
+            tags: getSymptomsByDepartment(department)
+          }
+        })
+        setDoctors(mapped)
+      } else if (data === null || (Array.isArray(data) && data.length === 0)) {
+        setError('No doctors available. Please check if the backend server is running on http://localhost:3000')
+      }
+    } catch (e) {
+      console.error('Fetch doctors error:', e)
+      setError('Failed to load doctors. Please check if the backend server is running.')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  // Fetch doctors on mount and poll every 3 seconds for updates
   useEffect(() => {
     let cancelled = false
-    const fetchDoctors = async () => {
-      try {
-        setLoading(true)
-        setError('')
-        const data = await getAllDoctors()
-        if (!cancelled) {
-          if (Array.isArray(data) && data.length > 0) {
-            const mapped = data.map(d => {
-              const department = d.specialization || 'General Medicine'
-              return {
-                id: d.id,
-                name: d.name,
-                department: department,
-                available: true,
-                tags: getSymptomsByDepartment(department)
-              }
-            })
-            setDoctors(mapped)
-          } else if (data === null || (Array.isArray(data) && data.length === 0)) {
-            setError('No doctors available. Please check if the backend server is running on http://localhost:3000')
-          }
-        }
-      } catch (e) {
-        if (!cancelled) {
-          console.error('Fetch doctors error:', e)
-          setError('Failed to load doctors. Please check if the backend server is running.')
-        }
-      } finally {
-        if (!cancelled) setLoading(false)
+    
+    const fetch = async () => {
+      if (!cancelled) {
+        await fetchDoctors()
       }
     }
-    // Only fetch on initial mount - removed window focus listener
-    fetchDoctors()
-    return () => { cancelled = true }
-  }, [])
+    
+    // Initial fetch
+    fetch()
+    
+    // Poll every 3 seconds for database changes
+    const interval = setInterval(() => {
+      if (!cancelled) {
+        fetch()
+      }
+    }, 3000)
+    
+    return () => {
+      cancelled = true
+      clearInterval(interval)
+    }
+  }, [fetchDoctors])
 
   // Fetch stats data function (reusable) - only called when needed
   const fetchStats = React.useCallback(async () => {
@@ -121,25 +144,104 @@ function Dashboard() {
       }).length : 0
       
       const prescriptionCount = Array.isArray(presc) ? presc.length : 0
-      const tokenCount = Array.isArray(tokens) ? tokens.length : 0
+      
+      // Pending appointments are those with status "Pending" (case-insensitive)
+      const pendingAppointments = Array.isArray(appts) ? appts.filter(a => {
+        const status = (a.status || 'pending').toLowerCase()
+        return status === 'pending' || !a.status
+      }).length : 0
+      
+      // Completed appointments count
+      const completedAppointments = Array.isArray(appts) ? appts.filter(a => {
+        const status = (a.status || '').toLowerCase()
+        return status === 'completed'
+      }).length : 0
       
       setStats({
         upcomingAppointments: upcoming,
         prescriptions: prescriptionCount,
-        tokensCount: tokenCount
+        tokensCount: completedAppointments // Changed to show completed appointments
       })
     } catch (e) {
       console.error('Fetch stats error:', e)
     }
   }, [storedUser?.id]) // Only depend on user ID
 
-  // Fetch stats ONLY on initial mount
+  // Check for pending tokens on mount and whenever stats change
   useEffect(() => {
+    const checkPendingTokens = async () => {
+      if (!storedUser || !storedUser.id) return
+      try {
+        const tokens = await getTokensByPatientId(storedUser.id)
+        const pendingToken = tokens.find(t => t.status === 'Pending' || !t.status)
+        
+        if (pendingToken) {
+          setTokenNotification({
+            show: true,
+            tokenNumber: pendingToken.tokenNumber,
+            doctorName: pendingToken.doctorName || 'Doctor',
+            tokenId: pendingToken.id
+          })
+        } else {
+          setTokenNotification({ show: false, tokenNumber: null, doctorName: '', tokenId: null })
+        }
+      } catch (error) {
+        console.error('Error checking pending tokens:', error)
+      }
+    }
+    
     if (storedUser && storedUser.id) {
       fetchStats()
+      checkPendingTokens()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []) // Empty dependency array - only runs once on mount
+
+  // Poll token status to detect when consultation is completed
+  useEffect(() => {
+    if (!storedUser || !storedUser.id) return
+
+    const checkTokenStatus = async () => {
+      try {
+        const tokens = await getTokensByPatientId(storedUser.id)
+        const pendingToken = tokens.find(t => t.status === 'Pending' || !t.status)
+        
+        if (pendingToken) {
+          // Show notification if pending token exists
+          setTokenNotification({
+            show: true,
+            tokenNumber: pendingToken.tokenNumber,
+            doctorName: pendingToken.doctorName || 'Doctor',
+            tokenId: pendingToken.id
+          })
+        } else {
+          // Hide notification if no pending tokens
+          setTokenNotification({ show: false, tokenNumber: null, doctorName: '', tokenId: null })
+        }
+        
+        // Update stats - fetch appointments for completed appointments count
+        try {
+          const [appts] = await Promise.all([
+            getAppointmentsByPatientId(storedUser.id)
+          ])
+          const completedAppts = Array.isArray(appts) ? appts.filter(a => {
+            const status = (a.status || '').toLowerCase()
+            return status === 'completed'
+          }).length : 0
+          setStats(prev => ({ ...prev, tokensCount: completedAppts }))
+        } catch (e) {
+          console.error('Error updating appointments stats:', e)
+        }
+      } catch (error) {
+        console.error('Error checking token status:', error)
+      }
+    }
+
+    // Check every 2 seconds for faster updates
+    const interval = setInterval(checkTokenStatus, 2000)
+    
+    return () => clearInterval(interval)
+  }, [storedUser?.id])
 
   const filteredDoctors = useMemo(() => {
     let list = doctors
@@ -175,13 +277,33 @@ function Dashboard() {
       return
     }
 
+    // Check if doctor is available
+    if (!doctor.available) {
+      alert('This doctor is currently unavailable. Please select another doctor.')
+      return
+    }
+
+    // Check if patient already has a pending token
+    try {
+      const tokens = await getTokensByPatientId(storedUser.id)
+      const pendingToken = tokens.find(t => t.status === 'Pending' || !t.status)
+      
+      if (pendingToken) {
+        alert(`You already have a pending token (Token #${pendingToken.tokenNumber}) with ${pendingToken.doctorName || 'a doctor'}. Please wait for it to be completed before booking a new token.`)
+        return
+      }
+    } catch (error) {
+      console.error('Error checking pending tokens:', error)
+    }
+
     try {
       setBookingToken(true)
       const tokenData = {
         patientId: storedUser.id,
         doctorId: doctor.id,
         doctorName: doctor.name,
-        patientName: storedUser.fullName || storedUser.name || patientName
+        patientName: storedUser.fullName || storedUser.name || patientName,
+        status: 'Pending'
       }
       
       const newToken = await createToken(tokenData)
@@ -189,7 +311,14 @@ function Dashboard() {
       if (newToken) {
         // Refresh stats after successful booking
         await fetchStats()
-        alert(`Token #${newToken.tokenNumber} booked successfully with ${doctor.name} for today!`)
+        // Show notification popup
+        setTokenNotification({
+          show: true,
+          tokenNumber: newToken.tokenNumber,
+          doctorName: doctor.name,
+          tokenId: newToken.id
+        })
+        alert(`Token #${newToken.tokenNumber} booked successfully with ${doctor.name}!`)
       } else {
         alert('Failed to book token. Please try again.')
       }
@@ -295,10 +424,13 @@ function Dashboard() {
               whileHover={{ scale: 1.05, y: -5 }}
               className="rounded-2xl border border-emerald-100/50 bg-white/80 backdrop-blur-xl p-6 shadow-lg hover:shadow-xl transition-all"
             >
-              <div className="inline-block rounded-xl bg-cyan-100 px-3 py-1.5 text-xs font-semibold text-cyan-700 mb-3">Booked Tokens</div>
+              <div className="inline-block rounded-xl bg-cyan-100 px-3 py-1.5 text-xs font-semibold text-cyan-700 mb-3">Completed Appointments</div>
               <div className="text-3xl font-extrabold text-slate-800">
-                {stats.tokensCount} {stats.tokensCount === 1 ? 'Token' : 'Tokens'}
+                {stats.tokensCount} {stats.tokensCount === 1 ? 'Appointment' : 'Appointments'}
               </div>
+              {stats.tokensCount > 0 && (
+                <p className="text-xs text-gray-500 mt-2">Consultations completed</p>
+              )}
             </motion.div>
           </motion.section>
 
@@ -461,7 +593,7 @@ function Dashboard() {
                 to="/appointments" 
                 className="inline-flex items-center rounded-xl bg-emerald-500 hover:bg-emerald-600 px-6 py-3 text-white font-semibold shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5"
               >
-                Show Appointments & Prescriptions
+                Show Appointments Page
               </Link>
             </div>
           </motion.section>
@@ -525,6 +657,48 @@ function Dashboard() {
       
       {/* Floating Chat Button */}
       <BotpressChatbot floating={true} />
+
+      {/* Token Notification Popup */}
+      {tokenNotification.show && (
+        <motion.div
+          initial={{ opacity: 0, y: 50, scale: 0.9 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 50, scale: 0.9 }}
+          className="fixed bottom-6 right-6 z-50 max-w-md"
+        >
+          <div className="relative rounded-2xl border-2 border-emerald-500 bg-white shadow-2xl p-6">
+            <div className="absolute -top-3 -right-3">
+              <button
+                onClick={() => setTokenNotification({ show: false, tokenNumber: null, doctorName: '', tokenId: null })}
+                className="rounded-full bg-red-500 hover:bg-red-600 text-white w-8 h-8 flex items-center justify-center transition-colors"
+              >
+                ×
+              </button>
+            </div>
+            <div className="flex items-start gap-4">
+              <div className="rounded-full bg-emerald-100 p-3">
+                <FontAwesomeIcon icon={faCalendarCheck} className="text-emerald-600 text-2xl" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-emerald-700 mb-1">Token Booked Successfully!</h3>
+                <p className="text-sm text-gray-700 mb-2">
+                  Your token <span className="font-bold text-emerald-600">#{tokenNotification.tokenNumber}</span> has been booked with{' '}
+                  <span className="font-semibold">{tokenNotification.doctorName}</span>
+                </p>
+                <p className="text-xs text-gray-500">
+                  Waiting for doctor consultation... This notification will automatically disappear once the consultation is completed.
+                </p>
+              </div>
+            </div>
+            <div className="mt-4 pt-4 border-t border-emerald-100">
+              <div className="flex items-center gap-2 text-xs text-emerald-600">
+                <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span>Consultation Status: Pending</span>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
     </Layout>
   )
 }

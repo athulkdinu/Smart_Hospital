@@ -6,6 +6,7 @@ import {
   getAllPatientHistory,
   getAllTockens,
 } from "../services/doctor_api";
+import { updateToken } from "../services/tokenApi";
 import PatientHistory from "../components/PatientHistoryModal"; // Make sure this file exists!
 
 // Helper – turn any prescription shape into an array of strings
@@ -130,6 +131,16 @@ export default function DoctorDashboard() {
       await AddPatientHistory(payload);
       const fresh = await getAllPatientHistory();
       if (Array.isArray(fresh)) setPatientHistory(fresh);
+      
+      // Update token status to Completed in backend
+      if (currentPatient.id) {
+        try {
+          await updateToken(currentPatient.id, { status: "Completed" });
+        } catch (tokenError) {
+          console.error("Failed to update token status:", tokenError);
+        }
+      }
+      
       alert("Prescription saved!");
     } catch (e) {
       console.error(e);
