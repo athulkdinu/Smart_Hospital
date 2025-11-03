@@ -38,6 +38,7 @@ function Appointments() {
     show: false,
     pendingAppointments: [] // Array of all pending appointments
   })
+  const [appointmentNotificationMinimized, setAppointmentNotificationMinimized] = useState(false)
 
   // Fetch appointments and doctors (reusable function)
   const fetchAll = useCallback(async () => {
@@ -207,9 +208,11 @@ function Appointments() {
               show: true,
               pendingAppointments: formattedPending
             })
+            // Keep minimized state as-is
           } else {
             // No pending appointments, hide notification
             setAppointmentNotification({ show: false, pendingAppointments: [] })
+            setAppointmentNotificationMinimized(false)
           }
         }
       } catch (error) {
@@ -621,7 +624,7 @@ function Appointments() {
       </div>
 
       {/* Appointment Notification Popup - Shows All Pending Appointments */}
-      {appointmentNotification.show && appointmentNotification.pendingAppointments.length > 0 && (
+      {appointmentNotification.show && appointmentNotification.pendingAppointments.length > 0 && !appointmentNotificationMinimized && (
         <motion.div
           initial={{ opacity: 0, x: 100, scale: 0.95 }}
           animate={{ opacity: 1, x: 0, scale: 1 }}
@@ -639,6 +642,15 @@ function Appointments() {
               className="absolute top-4 right-4 rounded-full bg-white/80 hover:bg-red-100 text-gray-600 hover:text-red-600 w-7 h-7 flex items-center justify-center transition-all shadow-sm hover:shadow-md z-10"
             >
               <FontAwesomeIcon icon={faXmark} className="text-xs" />
+            </button>
+
+            {/* Hide button */}
+            <button
+              onClick={() => setAppointmentNotificationMinimized(true)}
+              className="absolute top-4 left-4 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white w-7 h-7 flex items-center justify-center transition-all shadow-sm hover:shadow-md z-10"
+              title="Hide notification"
+            >
+              −
             </button>
 
             <div className="p-6 pt-8 flex-1 flex flex-col">
@@ -716,6 +728,17 @@ function Appointments() {
             </div>
           </div>
         </motion.div>
+      )}
+
+      {/* Floating minimized appointment icon (bottom-left) */}
+      {appointmentNotification.show && appointmentNotification.pendingAppointments.length > 0 && appointmentNotificationMinimized && (
+        <button
+          onClick={() => setAppointmentNotificationMinimized(false)}
+          className="fixed bottom-6 left-6 z-50 h-12 w-12 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg flex items-center justify-center"
+          title={`${appointmentNotification.pendingAppointments.length} pending appointment(s)`}
+        >
+          <FontAwesomeIcon icon={faCalendarCheck} />
+        </button>
       )}
     </Layout>
   )

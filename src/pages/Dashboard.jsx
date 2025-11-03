@@ -63,6 +63,7 @@ function Dashboard() {
     doctorName: '',
     tokenId: null
   })
+  const [tokenNotificationMinimized, setTokenNotificationMinimized] = useState(false)
 
   // Get search term from header if available
   useEffect(() => {
@@ -73,60 +74,45 @@ function Dashboard() {
     }
   }, [])
 
-  // Fetch doctors function
-  const fetchDoctors = React.useCallback(async () => {
-    try {
-      setLoading(true)
-      setError('')
-      const data = await getAllDoctors()
-      if (Array.isArray(data) && data.length > 0) {
-        const mapped = data.map(d => {
-          const department = d.specialization || 'General Medicine'
-          return {
-            id: d.id,
-            name: d.name,
-            department: department,
-            available: d.available !== undefined ? d.available : true,
-            tags: getSymptomsByDepartment(department)
-          }
-        })
-        setDoctors(mapped)
-      } else if (data === null || (Array.isArray(data) && data.length === 0)) {
-        setError('No doctors available. Please check if the backend server is running on http://localhost:3000')
-      }
-    } catch (e) {
-      console.error('Fetch doctors error:', e)
-      setError('Failed to load doctors. Please check if the backend server is running.')
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  // Fetch doctors on mount and poll every 3 seconds for updates
+  // Fetch doctors only once on mount (no polling)
   useEffect(() => {
     let cancelled = false
-    
-    const fetch = async () => {
-      if (!cancelled) {
-        await fetchDoctors()
+
+    const fetchDoctors = async () => {
+      try {
+        setLoading(true)
+        setError('')
+        const data = await getAllDoctors()
+        if (Array.isArray(data) && data.length > 0) {
+          const mapped = data.map(d => {
+            const department = d.specialization || 'General Medicine'
+            return {
+              id: d.id,
+              name: d.name,
+              department: department,
+              available: d.available !== undefined ? d.available : true,
+              tags: getSymptomsByDepartment(department)
+            }
+          })
+          if (!cancelled) setDoctors(mapped)
+        } else if (data === null || (Array.isArray(data) && data.length === 0)) {
+          if (!cancelled) setError('No doctors available. Please check if the backend server is running on http://localhost:3000')
+        }
+      } catch (e) {
+        console.error('Fetch doctors error:', e)
+        if (!cancelled) setError('Failed to load doctors. Please check if the backend server is running.')
+      } finally {
+        if (!cancelled) setLoading(false)
       }
     }
-    
-    // Initial fetch
-    fetch()
-    
-    // Poll every 3 seconds for database changes
-    const interval = setInterval(() => {
-      if (!cancelled) {
-        fetch()
-      }
-    }, 3000)
-    
+
+    // Initial fetch only
+    fetchDoctors()
+
     return () => {
       cancelled = true
-      clearInterval(interval)
     }
-  }, [fetchDoctors])
+  }, [])
 
   // Fetch stats data function (reusable) - only called when needed
   const fetchStats = React.useCallback(async () => {
@@ -173,8 +159,19 @@ function Dashboard() {
       if (!storedUser || !storedUser.id) return
       try {
         const tokens = await getTokensByPatientId(storedUser.id)
-        const pendingToken = tokens.find(t => t.status === 'Pending' || !t.status)
-        
+        const lower = (s) => (s || '').toLowerCase()
+        const pendingToken = tokens.find(t => lower(t.status) === 'pending' || !t.status)
+        const skippedToken = tokens.find(t => lower(t.status) === 'skipped')
+
+        // One-time alert if there is a skipped token
+        if (skippedToken) {
+          const todayKey = `skippedAlertShown-${storedUser.id}-${new Date().toISOString().split('T')[0]}`
+          if (!localStorage.getItem(todayKey)) {
+            alert('Your previous token was marked as Skipped. You may take the next token.')
+            localStorage.setItem(todayKey, '1')
+          }
+        }
+
         if (pendingToken) {
           setTokenNotification({
             show: true,
@@ -184,6 +181,7 @@ function Dashboard() {
           })
         } else {
           setTokenNotification({ show: false, tokenNumber: null, doctorName: '', tokenId: null })
+          setTokenNotificationMinimized(false)
         }
       } catch (error) {
         console.error('Error checking pending tokens:', error)
@@ -204,7 +202,8 @@ function Dashboard() {
     const checkTokenStatus = async () => {
       try {
         const tokens = await getTokensByPatientId(storedUser.id)
-        const pendingToken = tokens.find(t => t.status === 'Pending' || !t.status)
+        const lower = (s) => (s || '').toLowerCase()
+        const pendingToken = tokens.find(t => lower(t.status) === 'pending' || !t.status)
         
         if (pendingToken) {
           // Show notification if pending token exists
@@ -217,6 +216,7 @@ function Dashboard() {
         } else {
           // Hide notification if no pending tokens
           setTokenNotification({ show: false, tokenNumber: null, doctorName: '', tokenId: null })
+          setTokenNotificationMinimized(false)
         }
         
         // Update stats - fetch appointments for completed appointments count
@@ -286,7 +286,8 @@ function Dashboard() {
     // Check if patient already has a pending token
     try {
       const tokens = await getTokensByPatientId(storedUser.id)
-      const pendingToken = tokens.find(t => t.status === 'Pending' || !t.status)
+      const lower = (s) => (s || '').toLowerCase()
+      const pendingToken = tokens.find(t => lower(t.status) === 'pending' || !t.status)
       
       if (pendingToken) {
         alert(`You already have a pending token (Token #${pendingToken.tokenNumber}) with ${pendingToken.doctorName || 'a doctor'}. Please wait for it to be completed before booking a new token.`)
@@ -659,7 +660,7 @@ function Dashboard() {
       <BotpressChatbot floating={true} />
 
       {/* Token Notification Popup */}
-      {tokenNotification.show && (
+      {tokenNotification.show && !tokenNotificationMinimized && (
         <motion.div
           initial={{ opacity: 0, y: 50, scale: 0.9 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -673,6 +674,15 @@ function Dashboard() {
                 className="rounded-full bg-red-500 hover:bg-red-600 text-white w-8 h-8 flex items-center justify-center transition-colors"
               >
                 ×
+              </button>
+            </div>
+            <div className="absolute -top-3 -left-3">
+              <button
+                onClick={() => setTokenNotificationMinimized(true)}
+                className="rounded-full bg-emerald-500 hover:bg-emerald-600 text-white w-8 h-8 flex items-center justify-center transition-colors"
+                title="Hide notification"
+              >
+                −
               </button>
             </div>
             <div className="flex items-start gap-4">
@@ -698,6 +708,17 @@ function Dashboard() {
             </div>
           </div>
         </motion.div>
+      )}
+
+      {/* Floating minimized token icon (bottom-left) */}
+      {tokenNotification.show && tokenNotificationMinimized && (
+        <button
+          onClick={() => setTokenNotificationMinimized(false)}
+          className="fixed bottom-6 left-6 z-50 h-12 w-12 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg flex items-center justify-center"
+          title={`Token #${tokenNotification.tokenNumber} — ${tokenNotification.doctorName}`}
+        >
+          <FontAwesomeIcon icon={faCalendarCheck} />
+        </button>
       )}
     </Layout>
   )
