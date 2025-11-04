@@ -565,131 +565,142 @@ export default function DoctorDashboard() {
             </motion.section>
 
             {/* Current Consultation */}
-            <motion.section
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="lg:col-span-5 rounded-2xl border border-emerald-100/50 bg-white/80 backdrop-blur-xl p-6 shadow-lg"
-            >
-              <h3 className="text-xl font-bold text-emerald-700 flex items-center gap-2 mb-4">
-                <FontAwesomeIcon icon={faStethoscope} className="text-emerald-600" />
-                Current Consultation
-              </h3>
+            
+<motion.section
+  initial={{ opacity: 0, y: 30 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ delay: 0.3 }}
+  className="lg:col-span-5 rounded-2xl border border-emerald-100/50 bg-white/80 backdrop-blur-xl p-6 shadow-lg"
+>
+  <h3 className="text-xl font-bold text-emerald-700 flex items-center gap-2 mb-4">
+    <FontAwesomeIcon icon={faStethoscope} className="text-emerald-600" />
+    Current Consultation
+  </h3>
 
-              {currentPatient ? (
-                <div className="space-y-5">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <p className="text-2xl font-bold text-slate-800">
-                        {currentPatient.patientName}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        Token #{currentPatient.tokenNumber}
-                      </p>
-                    </div>
-                    <StatusBadge status={currentPatient.status || "Pending"} />
-                  </div>
+  {currentPatient ? (
+    <div className="space-y-5">
+      <div className="flex justify-between items-center">
+        <div>
+          <p className="text-2xl font-bold text-slate-800">
+            {currentPatient.patientName}
+          </p>
+          <p className="text-sm text-gray-600">
+            Token #{currentPatient.tokenNumber}
+          </p>
+        </div>
+        <StatusBadge status={currentPatient.status || "Pending"} />
+      </div>
 
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      <FontAwesomeIcon icon={faNotesMedical} className="mr-1" /> Diagnosis
-                    </label>
-                    <input
-                      type="text"
-                      value={disease}
-                      onChange={(e) => setDisease(e.target.value)}
-                      placeholder="e.g., Viral Fever"
-                      className="w-full px-4 py-2.5 rounded-xl border-2 border-emerald-100 bg-white/90 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
-                    />
-                  </div>
+      <div>
+        <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <FontAwesomeIcon icon={faNotesMedical} className="mr-1" /> Diagnosis
+        </label>
+        <input
+          type="text"
+          value={disease}
+          onChange={(e) => setDisease(e.target.value)}
+          placeholder="e.g., Viral Fever"
+          className="w-full px-4 py-2.5 rounded-xl border-2 border-emerald-100 bg-white/90 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+        />
+      </div>
 
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      <FontAwesomeIcon icon={faPrescriptionBottleAlt} className="mr-1" /> Prescription
-                    </label>
-                    <div className="flex gap-2 mb-3">
-                      <input
-                        type="text"
-                        value={newMedicine}
-                        onChange={(e) => setNewMedicine(e.target.value)}
-                        onKeyPress={(e) => e.key === "Enter" && handleAddMedicine()}
-                        placeholder="Add medicine"
-                        className="flex-1 px-4 py-2.5 rounded-xl border-2 border-emerald-100 bg-white/90 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
-                      />
-                      <button
-                        onClick={handleAddMedicine}
-                        className="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-medium shadow-md hover:shadow-lg transition-all"
-                      >
-                        Add
-                      </button>
-                    </div>
-                    {medicines.length > 0 && (
-                      <ul className="space-y-1 text-sm text-gray-700">
-                        {medicines.map((m, i) => (
-                          <li key={i} className="flex items-center gap-2">
-                            <FontAwesomeIcon
-                              icon={faCheckCircle}
-                              className="text-emerald-500 text-xs"
-                            />
-                            {m}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
+      <div>
+        <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <FontAwesomeIcon icon={faPrescriptionBottleAlt} className="mr-1" /> Prescription
+        </label>
+        <div className="flex gap-2 mb-3">
+          <input
+            type="text"
+            value={newMedicine}
+            onChange={(e) => setNewMedicine(e.target.value)}
+            onKeyPress={(e) => e.key === "Enter" && handleAddMedicine()}
+            placeholder="Add medicine"
+            className="flex-1 px-4 py-2.5 rounded-xl border-2 border-emerald-100 bg-white/90 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
+          />
+          <button
+            onClick={handleAddMedicine}
+            className="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-medium shadow-md hover:shadow-lg transition-all"
+          >
+            Add
+          </button>
+        </div>
+        {medicines.length > 0 && (
+          <ul className="space-y-1 text-sm text-gray-700">
+            {medicines.map((m, i) => (
+              <li key={i} className="flex items-center gap-2">
+                <FontAwesomeIcon
+                  icon={faCheckCircle}
+                  className="text-emerald-500 text-xs"
+                />
+                {m}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
 
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      <FontAwesomeIcon icon={faNotesMedical} className="mr-1" /> Notes
-                    </label>
-                    <textarea
-                      value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
-                      placeholder="Additional instructions..."
-                      rows={3}
-                      className="w-full p-3 rounded-xl border-2 border-emerald-100 bg-white/90 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all resize-none"
-                    />
-                  </div>
+      <div>
+        <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <FontAwesomeIcon icon={faNotesMedical} className="mr-1" /> Notes
+        </label>
+        <textarea
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          placeholder="Additional instructions..."
+          rows={3}
+          className="w-full p-3 rounded-xl border-2 border-emerald-100 bg-white/90 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all resize-none"
+        />
+      </div>
 
-                  <div className="flex justify-end gap-3 pt-3">
-                    <button
-                      onClick={handleComplete}
-                      disabled={actionLoading}
-                      className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-400 text-white px-6 py-2.5 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all"
-                    >
-                      {actionLoading ? (
-                        "Saving..."
-                      ) : (
-                        <>
-                          <FontAwesomeIcon icon={faCheckCircle} /> Complete
-                        </>
-                      )}
-                    </button>
-                    <button
-                      onClick={handleSkip}
-                      disabled={actionLoading}
-                      className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white px-6 py-2.5 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all"
-                    >
-                      <FontAwesomeIcon icon={faTimesCircle} /> Skip
-                    </button>
-                  </div>
+      {/* Action Buttons */}
+      <div className="flex justify-end gap-3 pt-3">
+        {/* Complete Button */}
+        <button
+          onClick={handleComplete}
+          disabled={actionLoading}
+          className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-400 text-white px-6 py-2.5 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all"
+        >
+          {actionLoading ? (
+            "Saving..."
+          ) : (
+            <>
+              <FontAwesomeIcon icon={faCheckCircle} /> Complete
+            </>
+          )}
+        </button>
 
-                  <PatientHistory
-                    selectedPatient={currentPatient}
-                    allHistory={patientHistory}
-                    normalizePrescription={normalizePrescription}
-                  />
-                </div>
-              ) : (
-                <div className="text-center py-12 text-gray-500">
-                  <FontAwesomeIcon
-                    icon={faUserCheck}
-                    className="text-4xl mb-3 text-emerald-300"
-                  />
-                  <p>Select a patient from the queue to begin</p>
-                </div>
-              )}
-            </motion.section>
+        {/* Skip Button – Only show if status is Pending */}
+        {currentPatient.status !== "Completed" && (
+          <button
+            onClick={handleSkip}
+            disabled={actionLoading || currentPatient.status === "Skipped"}
+            className={`inline-flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all ${
+              currentPatient.status === "Skipped"
+                ? "bg-gray-400 text-gray-700 cursor-not-allowed"
+                : "bg-red-600 hover:bg-red-700 text-white"
+            }`}
+          >
+            <FontAwesomeIcon icon={faTimesCircle} /> Skip
+          </button>
+        )}
+      </div>
+
+      <PatientHistory
+        selectedPatient={currentPatient}
+        allHistory={patientHistory}
+        normalizePrescription={normalizePrescription}
+      />
+    </div>
+  ) : (
+    <div className="text-center py-12 text-gray-500">
+      <FontAwesomeIcon
+        icon={faUserCheck}
+        className="text-4xl mb-3 text-emerald-300"
+      />
+      <p>Select a patient from the queue to begin</p>
+    </div>
+  )}
+</motion.section>
 
             {/* Appointments */}
             <motion.section
