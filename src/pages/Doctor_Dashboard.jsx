@@ -10,6 +10,8 @@ import {
 import PatientHistory from "../components/PatientHistoryModal";
 import commonAPI from "../services/commonAPI";
 import BASEURL from "../services/serverURL";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faUserDoctor,
@@ -300,6 +302,22 @@ export default function DoctorDashboard() {
       setAppointments((prev) =>
         prev.map((a) => (a.id === appt.id ? { ...a, status: newStatus } : a))
       );
+      
+      // Update stats after appointment status change
+      const updatedAppts = await getAllAppoinments();
+      if (Array.isArray(updatedAppts)) {
+        const filtered = updatedAppts.filter(
+          (a) => a.doctorId == doctorId || a.doctorName === doctorName
+        );
+        const total = filtered.length;
+        const completedAppts = filtered.filter((a) => a.status === "Completed").length;
+        
+        setStats((prev) => ({
+          ...prev,
+          totalAppointments: total,
+          completedAppointments: completedAppts,
+        }));
+      }
     } catch (e) {
       console.error("Failed to update appointment:", e);
     }
@@ -326,7 +344,9 @@ export default function DoctorDashboard() {
   };
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-emerald-50 via-cyan-50 to-teal-50 overflow-hidden">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-emerald-50 via-cyan-50 to-teal-50">
+      <Header patientName={doctorName} />
+      <div className="flex-1 relative overflow-hidden">
       {/* Background Pattern */}
       <div
         className="absolute inset-0 opacity-40"
@@ -665,6 +685,8 @@ export default function DoctorDashboard() {
           </motion.section>
         </div>
       </main>
+      </div>
+      <Footer />
     </div>
   );
 }

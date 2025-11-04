@@ -1,5 +1,5 @@
 import commonAPI from "./commonAPI";
-import BASEURL from "./BASEURL";
+import BASEURL from "./serverURL";
 
 // ✅ Get all histories for one patient
 export const getPatientHistoryByPatientIdAPI = async (patientId) => {

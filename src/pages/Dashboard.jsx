@@ -12,7 +12,7 @@ import { faClockRotateLeft, faUserDoctor, faBullhorn, faHeartPulse, faBandAid, f
 import { getAllDoctors } from '../services/doctorApi'
 import { createToken, getTokensByPatientId } from '../services/tokenApi'
 import { getAllAppointments, getAppointmentsByPatientId } from '../services/appointmentApi'
-import { getPrescriptionsByPatientId } from '../services/prescriptionApi'
+import { getPatientHistoryByPatientIdAPI } from '../services/patientHistory_api'
 
 function Dashboard() {
   const navigate = useNavigate()
@@ -118,9 +118,9 @@ function Dashboard() {
   const fetchStats = React.useCallback(async () => {
     if (!storedUser || !storedUser.id) return
     try {
-      const [appts, presc, tokens] = await Promise.all([
+      const [appts, historyData, tokens] = await Promise.all([
         getAppointmentsByPatientId(storedUser.id),
-        getPrescriptionsByPatientId(storedUser.id),
+        getPatientHistoryByPatientIdAPI(storedUser.id),
         getTokensByPatientId(storedUser.id)
       ])
       const now = new Date()
@@ -129,7 +129,12 @@ function Dashboard() {
         return !isNaN(apptDate.getTime()) && apptDate >= now
       }).length : 0
       
-      const prescriptionCount = Array.isArray(presc) ? presc.length : 0
+      // Get patient history count - filter to ensure only this patient's history
+      const validHistoryData = Array.isArray(historyData) ? historyData.flat() : []
+      const patientHistory = validHistoryData.filter(
+        (h) => String(h.patientId) === String(storedUser.id)
+      )
+      const prescriptionCount = patientHistory.length
       
       // Pending appointments are those with status "Pending" (case-insensitive)
       const pendingAppointments = Array.isArray(appts) ? appts.filter(a => {

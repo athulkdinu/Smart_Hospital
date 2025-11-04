@@ -8,17 +8,26 @@ const PatientHistory = () => {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState(null);
 
-  // ✅ Get logged-in patient details
-  const loggedInPatient = JSON.parse(localStorage.getItem("loggedPatient"));
+  // ✅ Get logged-in patient details from localStorage
+  const loggedInPatient = JSON.parse(localStorage.getItem("user") || "null");
 
   useEffect(() => {
     const fetchHistory = async () => {
       try {
-        if (!loggedInPatient?.id) return;
+        // Check if user exists and is a patient
+        if (!loggedInPatient?.id || loggedInPatient?.role !== "patient") {
+          setHistories([]);
+          setFiltered([]);
+          return;
+        }
 
+        // Fetch history filtered by patient ID
         const data = await getPatientHistoryByPatientIdAPI(loggedInPatient.id);
 
+        // Ensure data is an array
         const validData = Array.isArray(data) ? data.flat() : [];
+        
+        // Additional filter to ensure only this patient's history is shown
         const patientHistory = validData.filter(
           (h) => String(h.patientId) === String(loggedInPatient.id)
         );
@@ -71,7 +80,7 @@ const PatientHistory = () => {
           className="text-5xl font-extrabold drop-shadow-lg"
         >
           {loggedInPatient
-            ? `${loggedInPatient.fullName}'s History`
+            ? `${loggedInPatient.fullName || loggedInPatient.name || "Patient"}'s History`
             : "Patient History"}
         </motion.h1>
         <p className="mt-3 text-white/90 text-lg">

@@ -7,6 +7,8 @@ function Header({ patientName }) {
   const navigate = useNavigate()
   const location = useLocation()
   const [searchTerm, setSearchTerm] = useState('')
+  const user = JSON.parse(localStorage.getItem('user') || 'null')
+  const isDoctor = user?.role === 'doctor'
   const showSearch = location.pathname.startsWith('/dashboard')
 
   const handleLogout = () => {
@@ -28,13 +30,13 @@ function Header({ patientName }) {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-3">
 
         {/* Left: Brand */}
-        <Link to="/dashboard" className="flex items-center gap-3 group">
+        <Link to={isDoctor ? "/doctor" : "/dashboard"} className="flex items-center gap-3 group">
           <div className="h-9 w-9 rounded-xl bg-white/30 flex items-center justify-center shadow-inner">
             <span className="text-emerald-900 font-extrabold">M</span>
           </div>
           <div className="leading-tight">
             <div className="text-lg sm:text-xl font-extrabold text-white tracking-tight group-hover:opacity-90">MediConnect</div>
-            <div className="text-[10px] font-semibold text-white/80 hidden sm:block">Patient Portal</div>
+            <div className="text-[10px] font-semibold text-white/80 hidden sm:block">{isDoctor ? "Doctor Portal" : "Patient Portal"}</div>
           </div>
         </Link>
 
@@ -58,7 +60,7 @@ function Header({ patientName }) {
             Hi, {patientName}
           </span>
           <Link
-            to="/profile"
+            to={isDoctor ? "/dr_profile" : "/profile"}
             className="inline-flex items-center gap-2 bg-white text-emerald-700 px-4 py-2 rounded-xl font-semibold shadow-md hover:shadow-lg transition hover:-translate-y-0.5"
           >
             <FontAwesomeIcon icon={faUser} />
