@@ -379,7 +379,7 @@ export default function DoctorDashboard() {
             <div>
               <h1 className="text-3xl sm:text-4xl font-extrabold text-emerald-700 tracking-tight flex items-center gap-3">
                 <FontAwesomeIcon icon={faUserDoctor} className="text-emerald-600" />
-                Dr. {doctorName}'s Dashboard
+                 {doctorName}'s Dashboard
               </h1>
               <p className="mt-2 text-lg text-gray-700">Manage consultations, prescriptions, and appointments.</p>
             </div>
