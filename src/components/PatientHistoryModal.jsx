@@ -9,12 +9,15 @@ const PatientHistory = ({ selectedPatient, allHistory, normalizePrescription }) 
     );
   }
 
-  const records = allHistory.filter((h) => h.patientId === selectedPatient.id);
+  // Use patientId from token, NOT selectedPatient.id
+  const patientId = selectedPatient.patientId || selectedPatient.id;
+
+  const records = allHistory.filter((h) => h.patientId === patientId);
 
   if (records.length === 0) {
     return (
       <div className="text-gray-500 mt-4 italic">
-        No previous records found for {selectedPatient.name || selectedPatient.patientName}.
+        No previous records found for {selectedPatient.patientName}.
       </div>
     );
   }
@@ -22,13 +25,12 @@ const PatientHistory = ({ selectedPatient, allHistory, normalizePrescription }) 
   return (
     <div className="mt-6">
       <h3 className="text-lg font-semibold text-indigo-700 mb-3">
-        Patient History — {selectedPatient.name || selectedPatient.patientName}
+        Patient History — {selectedPatient.patientName}
       </h3>
 
-      <div className="space-y-4">
+      <div className="space-y-4 max-h-[40vh] overflow-y-auto pr-2">
         {records.map((rec) => {
           const lines = normalizePrescription(rec.prescription);
-          const complaint = rec.complaint || rec.issue || "—";
           const disease = rec.disease || "Not specified";
 
           return (
@@ -42,14 +44,13 @@ const PatientHistory = ({ selectedPatient, allHistory, normalizePrescription }) 
                   {rec.date} — {rec.time}
                 </p>
                 <span className="text-xs px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full">
-                  {rec.doctorName ? `Dr. ${rec.doctorName}` : "Unknown Doctor"}
+                  Dr. {rec.doctorName}
                 </span>
               </div>
 
               <div className="text-sm text-gray-700 space-y-1">
-                
                 <p>
-                  <strong>Disease / Diagnosis:</strong>{" "}
+                  <strong>Diagnosis:</strong>{" "}
                   <span className="text-gray-800">{disease}</span>
                 </p>
               </div>
@@ -57,7 +58,7 @@ const PatientHistory = ({ selectedPatient, allHistory, normalizePrescription }) 
               {lines.length > 0 && (
                 <div className="mt-2">
                   <strong className="text-gray-800">Prescription:</strong>
-                  <ul className="list-disc list-inside text-sm text-gray-700 mt-1 space-y-1">
+                  <ul className="list-disc list-inside text-sm text-gray-700 mt-1 space-y-0.5">
                     {lines.map((line, i) => (
                       <li key={i}>{line}</li>
                     ))}
@@ -67,7 +68,7 @@ const PatientHistory = ({ selectedPatient, allHistory, normalizePrescription }) 
 
               {rec.prescription?.note && (
                 <div className="mt-2 text-sm text-gray-700">
-                  <strong>Doctor's Note:</strong>{" "}
+                  <strong>Note:</strong>{" "}
                   <span className="italic">{rec.prescription.note}</span>
                 </div>
               )}

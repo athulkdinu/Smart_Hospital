@@ -1,30 +1,46 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import {
   getAllTockens,
   getAllAppoinments,
   getAllPatientHistory,
+  getDoctorById,
 } from "../services/doctor_api";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faUserDoctor,
+  faCheckCircle,
+  faUserSlash,
+  faStethoscope,
+  faPrescriptionBottleAlt,
+  faUsers,
+  faFileMedical,
+  faChartLine,
+  faPills,
+  faHeartbeat,
+  faNotesMedical,
+} from "@fortawesome/free-solid-svg-icons";
 
-/* --------------------------------------------------------------
-   Helper – format time without any external library
-   -------------------------------------------------------------- */
-const formatTime = (isoString) => {
-  if (!isoString) return "";
-  return new Date(isoString).toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  });
+/* ---------- Date / Time display helpers (exact match to payload) ---------- */
+const displayDate = (dateStr) => dateStr || "—";   // e.g. "2025-04-12"
+const displayTime = (timeStr) => timeStr || "—";   // e.g. "02:30 PM"
+
+/* ---------- Group-by-date helper ---------- */
+const groupByDate = (items, dateKey) => {
+  return items.reduce((acc, item) => {
+    const date = item[dateKey]?.split("T")[0];
+    if (date) acc[date] = (acc[date] || 0) + 1;
+    return acc;
+  }, {});
 };
 
-/* --------------------------------------------------------------
-   Main Component
-   -------------------------------------------------------------- */
 const DrProfilePage = () => {
   const navigate = useNavigate();
 
-  /* ---------- 1. Auth & Doctor Info ---------- */
+  // ----- Auth -----
   const storedUser = JSON.parse(localStorage.getItem("user"));
   if (!storedUser || storedUser.role !== "doctor") {
     navigate("/login");
@@ -32,416 +48,331 @@ const DrProfilePage = () => {
   }
 
   const doctorId = storedUser.id;
-  const doctorName = storedUser.name || "Dr. Unknown";
-  const specialization = storedUser.specialization || "General Medicine";
-
-  /* ---------- 2. State ---------- */
+  const [doctor, setDoctor] = useState(null);
   const [tokens, setTokens] = useState([]);
   const [appointments, setAppointments] = useState([]);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  /* ---------- 3. Date helpers ---------- */
-  const todayISO = new Date().toISOString().split("T")[0];
-  const weekAgoISO = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-    .toISOString()
-    .split("T")[0];
-
-  /* ---------- 4. Fetch data ---------- */
+  // ----- Fetch data -----
   useEffect(() => {
     const fetchAll = async () => {
       try {
-        const [tRes, aRes, hRes] = await Promise.all([
+        const [docRes, tRes, aRes, hRes] = await Promise.all([
+          getDoctorById(doctorId),
           getAllTockens(),
           getAllAppoinments(),
           getAllPatientHistory(),
         ]);
 
-        setTokens(tRes.data || []);
-        setAppointments(aRes.data || []);
-        setHistory(hRes.data || []);
+        setDoctor(docRes?.data || docRes);
+        setTokens(Array.isArray(tRes) ? tRes : tRes?.data || []);
+        setAppointments(Array.isArray(aRes) ? aRes : aRes?.data || []);
+        setHistory(Array.isArray(hRes) ? hRes : hRes?.data || []);
       } catch (err) {
         console.error("API error", err);
-        alert("Failed to load data");
+        alert("Failed to load profile data");
       } finally {
         setLoading(false);
       }
     };
     fetchAll();
-  }, []);
+  }, [doctorId]);
 
-  /* ---------- 5. Filter by doctor ---------- */
+  // ----- Filter by doctor -----
   const doctorTokens = tokens.filter((t) => t.doctorId == doctorId);
   const doctorAppointments = appointments.filter((a) => a.doctorId == doctorId);
   const doctorHistory = history.filter((h) => h.doctorId == doctorId);
 
-  /* ---------- 6. Today / Week / All-time ---------- */
-  const todayTokens = doctorTokens.filter((t) => t.date === todayISO);
-  const todayAppointments = doctorAppointments.filter((a) => a.date === todayISO);
-  const todayCheckups = doctorHistory.filter((h) => h.date === todayISO);
+  // ----- Stats -----
+  const totalPatientsSeen = new Set(doctorTokens.map((t) => t.patientId)).size;
+  const totalTokensIssued = doctorTokens.length;
+  const consultationsCompleted = doctorTokens.filter((t) => t.status === "Completed").length;
+  const tokensSkipped = doctorTokens.filter((t) => t.status === "Skipped").length;
 
-  const weekTokens = doctorTokens.filter((t) => t.date >= weekAgoISO);
-  const weekAppointments = doctorAppointments.filter((a) => a.date >= weekAgoISO);
-  const weekCheckups = doctorHistory.filter((h) => h.date >= weekAgoISO);
+  const totalMedicinesPrescribed = doctorHistory.reduce((sum, h) => {
+    const meds = Array.isArray(h.prescription?.list) ? h.prescription.list : h.prescription?.list || [];
+    return sum + meds.length;
+  }, 0);
 
-  const totalPatients = new Set(doctorTokens.map((t) => t.patientId)).size;
-  const totalCheckups = doctorHistory.length;
+  // last 30 days
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+  const last30Checkups = doctorHistory.filter((h) => h.date >= thirtyDaysAgo);
+  const avgPatientsPerDay = last30Checkups.length > 0 ? (last30Checkups.length / 30).toFixed(1) : "0.0";
 
-  /* ---------- 7. Stats object ---------- */
-  const stats = {
-    today: {
-      appointments: todayAppointments.length,
-      checkups: todayCheckups.length,
-      patients: new Set(todayTokens.map((t) => t.patientId)).size,
-    },
-    week: {
-      appointments: weekAppointments.length,
-      checkups: weekCheckups.length,
-      patients: new Set(weekTokens.map((t) => t.patientId)).size,
-    },
-    allTime: {
-      patients: totalPatients,
-      checkups: totalCheckups,
-      tokens: doctorTokens.length,
-    },
-  };
+  // peak day
+  const checkupsByDate = groupByDate(doctorHistory, "date");
+  const peakDayEntry = Object.entries(checkupsByDate).sort((a, b) => b[1] - a[1])[0];
+  const peakConsultationDay = peakDayEntry
+    ? `${peakDayEntry[0]} (${peakDayEntry[1]} patients)`
+    : "No data";
 
-  /* ---------- 8. Progress percentages ---------- */
-  const progress = {
-    completionRate:
-      doctorAppointments.length > 0
-        ? Math.round(
-            (doctorAppointments.filter((a) => a.status === "Completed").length /
-              doctorAppointments.length) *
-              100
-          )
-        : 0,
-    tokenEfficiency:
-      doctorTokens.length > 0
-        ? Math.round(
-            (doctorTokens.filter((t) => t.status === "Completed").length /
-              doctorTokens.length) *
-              100
-          )
-        : 0,
-  };
+  // top disease
+  const diseaseFreq = doctorHistory.reduce((acc, h) => {
+    const d = h.disease?.trim() || "General Checkup";
+    acc[d] = (acc[d] || 0) + 1;
+    return acc;
+  }, {});
+  const topDiseaseEntry = Object.entries(diseaseFreq).sort((a, b) => b[1] - a[1])[0];
+  const mostFrequentDisease = topDiseaseEntry
+    ? `${topDiseaseEntry[0]} (${topDiseaseEntry[1]} cases)`
+    : "N/A";
 
-  /* ---------- 9. Recent Activity (last 5) ---------- */
-  const recentActivity = [
-    ...doctorHistory.map((h) => ({ ...h, type: "checkup" })),
-    ...doctorTokens.map((t) => ({
-      ...t,
-      type: "token",
-      time: t.createdAt,
-    })),
-  ]
-    .sort((a, b) => new Date(b.time || b.date) - new Date(a.time || a.date))
-    .slice(0, 5);
+  // progress
+  const appointmentRate =
+    doctorAppointments.length > 0
+      ? Math.round(
+          (doctorAppointments.filter((a) => a.status === "Completed").length /
+            doctorAppointments.length) *
+            100
+        )
+      : 0;
 
-  /* ---------- 10. Loading UI ---------- */
+  const tokenEfficiency =
+    totalTokensIssued > 0
+      ? Math.round((consultationsCompleted / totalTokensIssued) * 100)
+      : 0;
+
+  // ----- Patient History (sorted newest first) -----
+  const sortedPatientHistory = [...doctorHistory]
+    .sort((a, b) => (b.date || "").localeCompare(a.date || "") || (b.time || "").localeCompare(a.time || ""));
+
+  // ----- Loading UI -----
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
-        <div className="text-xl font-medium text-indigo-600 animate-pulse">
-          Loading Profile...
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-cyan-50 to-teal-50">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+          className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full"
+        />
       </div>
     );
   }
 
-  /* ---------- 11. Main Render ---------- */
+  const doctorName = doctor?.name || storedUser.name || "Dr. Unknown";
+  const specialization = doctor?.specialization || storedUser.specialization || "General Medicine";
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-6">
-      {/* Header */}
-      <div className="max-w-7xl mx-auto mb-8">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => navigate(-1)}
-            className="p-2 rounded-full hover:bg-white/80 hover:shadow-md transition-all"
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-emerald-50 via-cyan-50 to-teal-50">
+      <Header patientName={doctorName} />
+
+      <div className="flex-1 relative overflow-hidden">
+        {/* Background Pattern */}
+        <div
+          className="absolute inset-0 opacity-40"
+          style={{
+            backgroundImage: `radial-gradient(circle at 2px 2px, rgba(16, 185, 129, 0.15) 1px, transparent 0)`,
+            backgroundSize: "40px 40px",
+          }}
+        />
+        <motion.div
+          className="absolute rounded-full bg-emerald-300/20 blur-3xl w-96 h-96 -top-32 -left-32"
+          animate={{ x: [0, 40, -30, 0], y: [0, 30, -20, 0] }}
+          transition={{ repeat: Infinity, duration: 20, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="absolute rounded-full bg-cyan-300/20 blur-3xl w-[32rem] h-[32rem] -bottom-32 -right-32"
+          animate={{ x: [0, -50, 35, 0], y: [0, -30, 15, 0] }}
+          transition={{ repeat: Infinity, duration: 25, ease: "easeInOut" }}
+        />
+
+        <main className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
+          {/* Hero */}
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-3xl border border-emerald-100/50 bg-white/80 backdrop-blur-2xl p-8 shadow-2xl"
           >
-            <svg
-              className="w-5 h-5 text-gray-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-          </button>
-          <h1 className="text-3xl font-bold text-gray-800">
-            My Professional Dashboard
-          </h1>
-        </div>
-        <p className="text-gray-600 mt-1">
-          Track your performance, patients, and progress
-        </p>
-      </div>
-
-      <div className="max-w-7xl mx-auto grid lg:grid-cols-3 gap-8">
-        {/* ---------- LEFT: Doctor Card + Progress ---------- */}
-        <div className="lg:col-span-1 space-y-6">
-          {/* Doctor Card */}
-          <div className="bg-white/90 backdrop-blur-sm shadow-xl rounded-3xl p-8 border border-white/30">
-            <div className="text-center">
-              <div className="w-28 h-28 mx-auto bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white text-3xl font-bold shadow-lg">
-                {doctorName
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")}
-              </div>
-              <h2 className="mt-4 text-2xl font-bold text-gray-800">
-                {doctorName}
-              </h2>
-              <p className="text-indigo-600 font-semibold text-lg">
-                {specialization}
-              </p>
-              <p className="text-sm text-gray-500 mt-1">Doctor ID: {doctorId}</p>
-            </div>
-
-            <div className="mt-8 space-y-4">
-              {/* Completion Rate */}
-              <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-4 rounded-xl">
-                <div className="text-sm text-gray-600">Appointment Completion</div>
-                <div className="flex items-center gap-2 mt-1">
-                  <div className="flex-1 bg-gray-200 rounded-full h-3">
-                    <div
-                      className="bg-gradient-to-r from-indigo-500 to-purple-500 h-full rounded-full transition-all duration-1000"
-                      style={{ width: `${progress.completionRate}%` }}
-                    />
-                  </div>
-                  <span className="text-sm font-bold text-indigo-700">
-                    {progress.completionRate}%
-                  </span>
-                </div>
-              </div>
-
-              {/* Token Efficiency */}
-              <div className="bg-gradient-to-r from-green-50 to-teal-50 p-4 rounded-xl">
-                <div className="text-sm text-gray-600">Token Efficiency</div>
-                <div className="flex items-center gap-2 mt-1">
-                  <div className="flex-1 bg-gray-200 rounded-full h-3">
-                    <div
-                      className="bg-gradient-to-r from-green-500 to-teal-500 h-full rounded-full transition-all duration-1000"
-                      style={{ width: `${progress.tokenEfficiency}%` }}
-                    />
-                  </div>
-                  <span className="text-sm font-bold text-green-700">
-                    {progress.tokenEfficiency}%
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Today's Summary */}
-          <div className="bg-white/90 backdrop-blur-sm shadow-xl rounded-3xl p-6 border border-white/30">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">
-              Today's Summary
-            </h3>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center p-3 bg-indigo-50 rounded-xl">
-                <span className="text-sm text-indigo-700 font-medium">
-                  Appointments
-                </span>
-                <span className="text-xl font-bold text-indigo-800">
-                  {stats.today.appointments}
-                </span>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-green-50 rounded-xl">
-                <span className="text-sm text-green-700 font-medium">
-                  Check-ups
-                </span>
-                <span className="text-xl font-bold text-green-800">
-                  {stats.today.checkups}
-                </span>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-purple-50 rounded-xl">
-                <span className="text-sm text-purple-700 font-medium">
-                  Patients Seen
-                </span>
-                <span className="text-xl font-bold text-purple-800">
-                  {stats.today.patients}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* ---------- CENTER: Performance Overview ---------- */}
-        <div className="lg:col-span-1 space-y-6">
-          <div className="bg-white/90 backdrop-blur-sm shadow-xl rounded-3xl p-6 border border-white/30">
-            <h3 className="text-lg font-semibold text-gray-800 mb-5">
-              Performance Overview
-            </h3>
-
-            {/* This Week */}
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <div className="text-center p-4 bg-gradient-to-br from-indigo-100 to-indigo-200 rounded-xl">
-                <div className="text-2xl font-bold text-indigo-800">
-                  {stats.week.appointments}
-                </div>
-                <div className="text-xs text-indigo-600 mt-1">
-                  Appointments (Week)
-                </div>
-              </div>
-              <div className="text-center p-4 bg-gradient-to-br from-green-100 to-green-200 rounded-xl">
-                <div className="text-2xl font-bold text-green-800">
-                  {stats.week.checkups}
-                </div>
-                <div className="text-xs text-green-600 mt-1">
-                  Check-ups (Week)
-                </div>
-              </div>
-            </div>
-
-            {/* All Time */}
-            <div className="space-y-4">
-              <div className="flex justify-between items-center p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl">
-                <div>
-                  <div className="text-sm text-purple-600">Total Patients</div>
-                  <div className="text-2xl font-bold text-purple-800">
-                    {stats.allTime.patients}
-                  </div>
-                </div>
-                <svg
-                  className="w-8 h-8 text-purple-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                  />
-                </svg>
-              </div>
-
-              <div className="flex justify-between items-center p-4 bg-gradient-to-r from-teal-50 to-cyan-50 rounded-xl">
-                <div>
-                  <div className="text-sm text-teal-600">
-                    Total Consultations
-                  </div>
-                  <div className="text-2xl font-bold text-teal-800">
-                    {stats.allTime.checkups}
-                  </div>
-                </div>
-                <svg
-                  className="w-8 h-8 text-teal-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
-                  />
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          {/* Quick Navigation */}
-          <div className="bg-white/90 backdrop-blur-sm shadow-xl rounded-3xl p-6 border border-white/30">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">
-              Quick Navigation
-            </h3>
-            <div className="space-y-3">
-              <button
-                onClick={() => navigate("/doctor")} // your dashboard route
-                className="w-full text-left p-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-medium rounded-xl transition-all flex items-center justify-between"
-              >
-                <span>Go to Dashboard</span>
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
-              </button>
-
-              <button
-                onClick={() => navigate("/appointments")}
-                className="w-full text-left p-3 bg-green-50 hover:bg-green-100 text-green-700 font-medium rounded-xl transition-all flex items-center justify-between"
-              >
-                <span>Manage Appointments</span>
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* ---------- RIGHT: Recent Activity ---------- */}
-        <div className="lg:col-span-1">
-          <div className="bg-white/90 backdrop-blur-sm shadow-xl rounded-3xl p-6 border border-white/30 h-full">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">
-              Recent Activity
-            </h3>
-            <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
-              {recentActivity.length === 0 ? (
-                <p className="text-center text-gray-500 py-8">
-                  No recent activity
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <h1 className="text-3xl sm:text-4xl font-extrabold text-emerald-700 tracking-tight flex items-center gap-3">
+                  <FontAwesomeIcon icon={faUserDoctor} className="text-emerald-600" />
+                  Dr. {doctorName}
+                </h1>
+                <p className="mt-2 text-lg text-gray-700">
+                  {specialization} • ID: {doctorId}
                 </p>
-              ) : (
-                recentActivity.map((act, i) => (
-                  <div
-                    key={i}
-                    className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl"
-                  >
-                    <div
-                      className={`w-2 h-2 rounded-full mt-2 ${
-                        act.type === "checkup"
-                          ? "bg-green-500"
-                          : "bg-indigo-500"
-                      }`}
-                    />
-                    <div className="flex-1">
-                      <p className="font-medium text-gray-800 text-sm">
-                        {act.type === "checkup"
-                          ? act.disease
-                          : `Token #${act.tokenNumber}`}
-                      </p>
-                      <p className="text-xs text-gray-600">
-                        {act.patientName} •{" "}
-                        {act.type === "checkup"
-                          ? act.time
-                          : formatTime(act.createdAt)}
-                      </p>
+              </div>
+              <button
+                onClick={() => navigate("/doctor")}
+                className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 px-6 py-3 text-white font-semibold shadow-lg hover:shadow-xl transition-all"
+              >
+                <FontAwesomeIcon icon={faStethoscope} />
+                Go to Dashboard
+              </button>
+            </div>
+          </motion.section>
+
+          {/* Stats Grid */}
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4"
+          >
+            {[
+              { icon: faUsers, label: "Total Patients Seen", value: totalPatientsSeen, color: "emerald" },
+              { icon: faFileMedical, label: "Tokens Issued", value: totalTokensIssued, color: "cyan" },
+              { icon: faCheckCircle, label: "Completed", value: consultationsCompleted, color: "green" },
+              { icon: faUserSlash, label: "Skipped", value: tokensSkipped, color: "red" },
+              { icon: faPills, label: "Medicines Given", value: totalMedicinesPrescribed, color: "teal" },
+            ].map((stat, i) => (
+              <motion.div
+                key={i}
+                whileHover={{ scale: 1.05, y: -5 }}
+                className="group relative rounded-2xl border border-emerald-100/50 bg-white/80 backdrop-blur-xl p-5 shadow-lg hover:shadow-xl transition-all text-center"
+                title={stat.label}
+              >
+                <div className={`inline-block rounded-xl bg-${stat.color}-100 px-2 py-1 text-xs font-semibold text-${stat.color}-700 mb-2`}>
+                  <FontAwesomeIcon icon={stat.icon} className="mr-1" />
+                  {stat.label}
+                </div>
+                <div className="text-2xl font-extrabold text-slate-800">{stat.value}</div>
+              </motion.div>
+            ))}
+          </motion.section>
+
+          {/* Progress + Patient History */}
+          <div className="grid lg:grid-cols-3 gap-6">
+            {/* Efficiency & Insights */}
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="lg:col-span-1 space-y-5"
+            >
+              <div className="rounded-2xl border border-emerald-100/50 bg-white/80 backdrop-blur-xl p-6 shadow-lg">
+                <h3 className="text-lg font-bold text-emerald-700 mb-4 flex items-center gap-2">
+                  <FontAwesomeIcon icon={faChartLine} /> Efficiency
+                </h3>
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span>Appointment Rate</span>
+                      <span className="font-bold">{appointmentRate}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-3">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${appointmentRate}%` }}
+                        className="bg-gradient-to-r from-emerald-500 to-teal-500 h-full rounded-full"
+                      />
                     </div>
                   </div>
-                ))
-              )}
-            </div>
+                  <div>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span>Token Efficiency</span>
+                      <span className="font-bold">{tokenEfficiency}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-3">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${tokenEfficiency}%` }}
+                        className="bg-gradient-to-r from-cyan-500 to-emerald-500 h-full rounded-full"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-emerald-100/50 bg-white/80 backdrop-blur-xl p-6 shadow-lg">
+                <h3 className="text-lg font-bold text-emerald-700 mb-3 flex items-center gap-2">
+                  <FontAwesomeIcon icon={faHeartbeat} /> Key Insights
+                </h3>
+                <ul className="space-y-3 text-sm">
+                  <li className="flex justify-between">
+                    <span className="text-gray-600">Avg Patients/Day (30d)</span>
+                    <span className="font-bold text-emerald-700">{avgPatientsPerDay}</span>
+                  </li>
+                  <li className="flex justify-between">
+                    <span className="text-gray-600">Peak Day</span>
+                    <span className="font-bold text-emerald-700 text-xs">{peakConsultationDay}</span>
+                  </li>
+                  <li className="flex justify-between">
+                    <span className="text-gray-600">Top Diagnosis</span>
+                    <span className="font-bold text-emerald-700">{mostFrequentDisease}</span>
+                  </li>
+                </ul>
+              </div>
+            </motion.div>
+
+            {/* Patient History */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="lg:col-span-2 rounded-2xl border border-emerald-100/50 bg-white/80 backdrop-blur-xl p-6 shadow-lg"
+            >
+              <h3 className="text-xl font-bold text-emerald-700 mb-4 flex items-center gap-2">
+                <FontAwesomeIcon icon={faFileMedical} /> Patient History
+                <span className="text-sm font-medium text-emerald-600 ml-auto">
+                  {sortedPatientHistory.length} records
+                </span>
+              </h3>
+
+              <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
+                {sortedPatientHistory.length === 0 ? (
+                  <p className="text-center text-gray-500 py-8">No patient history found</p>
+                ) : (
+                  sortedPatientHistory.map((h, i) => (
+                    <motion.div
+                      key={h.id || i}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.03 }}
+                      className="p-4 bg-emerald-50/70 rounded-xl border border-emerald-200 hover:shadow-md transition-shadow"
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <p className="font-semibold text-gray-800">{h.patientName}</p>
+                          <p className="text-xs text-gray-600">
+                            {displayDate(h.date)} • {displayTime(h.time)}
+                          </p>
+                        </div>
+                        <span className="text-xs px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full font-medium">
+                          {h.disease || "General Checkup"}
+                        </span>
+                      </div>
+
+                      {/* Prescription */}
+                      {h.prescription && (
+                        <div className="mt-3 pt-3 border-t border-emerald-200">
+                          <div className="flex items-center gap-2 text-sm text-gray-700 mb-2">
+                            <FontAwesomeIcon icon={faPills} className="text-emerald-600" />
+                            <span className="font-medium">Prescription:</span>
+                          </div>
+                          {Array.isArray(h.prescription.list) && h.prescription.list.length > 0 ? (
+                            <ul className="list-disc list-inside text-xs text-gray-600 space-y-0.5">
+                              {h.prescription.list.slice(0, 3).map((med, idx) => (
+                                <li key={idx}>{med}</li>
+                              ))}
+                              {h.prescription.list.length > 3 && (
+                                <li className="text-gray-500 italic">
+                                  +{h.prescription.list.length - 3} more...
+                                </li>
+                              )}
+                            </ul>
+                          ) : (
+                            <p className="text-xs text-gray-500 italic">No medicines listed</p>
+                          )}
+                          {h.prescription.note && (
+                            <p className="text-xs text-gray-600 mt-2 italic">
+                              <FontAwesomeIcon icon={faNotesMedical} className="mr-1" />
+                              "{h.prescription.note}"
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </motion.div>
+                  ))
+                )}
+              </div>
+            </motion.div>
           </div>
-        </div>
+        </main>
       </div>
+
+      <Footer />
     </div>
   );
 };
