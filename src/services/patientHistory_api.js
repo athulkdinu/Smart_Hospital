@@ -1,39 +1,47 @@
 import commonAPI from "./commonAPI";
-import BASEURL from "./serverURL";
+import BASEURL from "./BASEURL";
 
-// Add new patient history record
-export const addPatientHistoryAPI = async (data) => {
-  return await commonAPI("POST", `${BASEURL}/patienthistory`, data);
-};
-
-// Get all patient histories (for admin)
-export const getAllPatientHistoryAPI = async () => {
-  return await commonAPI("GET", `${BASEURL}/patienthistory`, {});
-};
-
-// Get histories for a specific patient by patientId
+// ✅ Get all histories for one patient
 export const getPatientHistoryByPatientIdAPI = async (patientId) => {
-  if (!patientId) return [];
-  const response = await commonAPI("GET", `${BASEURL}/patienthistory?patientId=${patientId}`, {});
-  
-  // json-server sometimes wraps result in array of arrays → flatten safely
-  const data = Array.isArray(response) ? response.flat() : [];
-  
-  // Extra safety: ensure only matching patientId (string comparison)
-  return data.filter(h => String(h.patientId) === String(patientId));
+  try {
+    const url = `${BASEURL}/patienthistory?patientId=${patientId}`;
+    const response = await commonAPI("GET", url);
+    return response;
+  } catch (error) {
+    console.error("Error fetching patient history:", error);
+    return [];
+  }
 };
 
-// Get single history by ID
-export const getPatientHistoryByIdAPI = async (id) => {
-  return await commonAPI("GET", `${BASEURL}/patienthistory/${id}`, {});
+// ✅ Add new record
+export const addPatientHistoryAPI = async (data) => {
+  try {
+    const url = `${BASEURL}/patienthistory`;
+    return await commonAPI("POST", url, data);
+  } catch (error) {
+    console.error("Error adding patient history:", error);
+    return null;
+  }
 };
 
-// Update an existing history
-export const updatePatientHistoryAPI = async (id, data) => {
-  return await commonAPI("PUT", `${BASEURL}/patienthistory/${id}`, data);
+// ✅ Update existing record
+export const updatePatientHistoryAPI = async (id, updatedData) => {
+  try {
+    const url = `${BASEURL}/patienthistory/${id}`;
+    return await commonAPI("PUT", url, updatedData);
+  } catch (error) {
+    console.error("Error updating patient history:", error);
+    return null;
+  }
 };
 
-// Delete a history record
+// ✅ Delete a record
 export const deletePatientHistoryAPI = async (id) => {
-  return await commonAPI("DELETE", `${BASEURL}/patienthistory/${id}`, {});
+  try {
+    const url = `${BASEURL}/patienthistory/${id}`;
+    return await commonAPI("DELETE", url);
+  } catch (error) {
+    console.error("Error deleting patient history:", error);
+    return null;
+  }
 };

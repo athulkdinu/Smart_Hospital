@@ -8,7 +8,7 @@ const PatientHistory = () => {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState(null);
 
-  // Get logged-in patient from localStorage
+  // ✅ Get logged-in patient details
   const loggedInPatient = JSON.parse(localStorage.getItem("loggedPatient"));
 
   useEffect(() => {
@@ -18,12 +18,7 @@ const PatientHistory = () => {
 
         const data = await getPatientHistoryByPatientIdAPI(loggedInPatient.id);
 
-        // Critical Fix: json-server returns [[]] or [] — flatten & filter safely
-        const validData = Array.isArray(data)
-          ? data.flat() // in case [[{...}]] → [{...}]
-          : [];
-
-        // Double-check: only keep records where patientId matches exactly
+        const validData = Array.isArray(data) ? data.flat() : [];
         const patientHistory = validData.filter(
           (h) => String(h.patientId) === String(loggedInPatient.id)
         );
@@ -40,7 +35,7 @@ const PatientHistory = () => {
     fetchHistory();
   }, [loggedInPatient?.id]);
 
-  // Search filter
+  // ✅ Search filter
   useEffect(() => {
     const s = search.toLowerCase();
     setFiltered(
@@ -53,7 +48,6 @@ const PatientHistory = () => {
     );
   }, [search, histories]);
 
-  // Rest of your UI (unchanged design)
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 relative overflow-hidden">
       {/* Floating Background Orbs */}
