@@ -7,8 +7,9 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import DoctorDashboard from './pages/Doctor_Dashboard'
 import MyPatientsPage from './pages/MyPatientsPage'
+import PatientHistory from './pages/PatientHistory'
 import DrProfilePage from './pages/Dr_Profile_Page'
-import Landing from "./pages/Landing"; // 👈 import Landing page
+import Landing from "./pages/Landing"; 
 import AdminDashboard from './components/AdminDashboard'
 
 function App() {
@@ -42,7 +43,7 @@ function App() {
         />
         <Route
           path="/patient_history"
-          element={user ? <MyPatientsPage /> : <Navigate to="/login" replace />}
+          element={user ? <PatientHistory /> : <Navigate to="/login" replace />}
         />
         <Route
           path="/dr_profile"
@@ -55,7 +56,7 @@ function App() {
           element={<AdminDashboard />}
         />
 
-        {/* ✅ Catch-all route */}
+        
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
   );

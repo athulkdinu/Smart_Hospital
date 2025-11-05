@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import axios from "axios";
+import { getPatientHistoryByPatientIdAPI } from "../services/patientHistory_api";
 
 const PatientHistory = () => {
   const [histories, setHistories] = useState([]);
@@ -8,17 +8,43 @@ const PatientHistory = () => {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState(null);
 
-  useEffect(() => {
-    axios
-      .get("http://localhost:3000/patienthistory")
-      .then((res) => {
-        setHistories(res.data);
-        setFiltered(res.data);
-      })
-      .catch((err) => console.error("Error fetching patient history:", err));
-  }, []);
+  // ✅ Get logged-in patient details from localStorage
+  const loggedInPatient = JSON.parse(localStorage.getItem("user") || "null");
 
-  // ✅ Filter handler
+  useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        // Check if user exists and is a patient
+        if (!loggedInPatient?.id || loggedInPatient?.role !== "patient") {
+          setHistories([]);
+          setFiltered([]);
+          return;
+        }
+
+        // Fetch history filtered by patient ID
+        const data = await getPatientHistoryByPatientIdAPI(loggedInPatient.id);
+
+        // Ensure data is an array
+        const validData = Array.isArray(data) ? data.flat() : [];
+        
+        // Additional filter to ensure only this patient's history is shown
+        const patientHistory = validData.filter(
+          (h) => String(h.patientId) === String(loggedInPatient.id)
+        );
+
+        setHistories(patientHistory);
+        setFiltered(patientHistory);
+      } catch (error) {
+        console.error("Error fetching patient history:", error);
+        setHistories([]);
+        setFiltered([]);
+      }
+    };
+
+    fetchHistory();
+  }, [loggedInPatient?.id]);
+
+  // ✅ Search filter
   useEffect(() => {
     const s = search.toLowerCase();
     setFiltered(
@@ -26,7 +52,7 @@ const PatientHistory = () => {
         (h) =>
           h.patientName?.toLowerCase().includes(s) ||
           h.doctorName?.toLowerCase().includes(s) ||
-          h.complaint?.toLowerCase().includes(s)
+          h.disease?.toLowerCase().includes(s)
       )
     );
   }, [search, histories]);
@@ -53,17 +79,20 @@ const PatientHistory = () => {
           transition={{ duration: 0.8 }}
           className="text-5xl font-extrabold drop-shadow-lg"
         >
-          Patient History
+          {loggedInPatient
+            ? `${loggedInPatient.fullName || loggedInPatient.name || "Patient"}'s History`
+            : "Patient History"}
         </motion.h1>
         <p className="mt-3 text-white/90 text-lg">
-          Review all patient consultations, prescriptions, and notes
+          Review your past consultations, prescriptions, and doctor notes
         </p>
       </div>
 
+      {/* Search bar */}
       <div className="max-w-6xl mx-auto mt-10 px-6 flex flex-col md:flex-row items-center justify-between gap-4">
         <input
           type="text"
-          placeholder="🔍 Search by doctor, patient, or complaint..."
+          placeholder="Search by doctor or disease..."
           className="w-full md:w-1/2 px-4 py-3 rounded-xl border border-emerald-200 shadow-sm focus:ring-2 focus:ring-emerald-400 focus:outline-none"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -73,6 +102,7 @@ const PatientHistory = () => {
         </p>
       </div>
 
+      {/* Cards Grid */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -89,10 +119,9 @@ const PatientHistory = () => {
             }}
             whileTap={{ scale: 0.97 }}
             transition={{ type: "spring", stiffness: 200 }}
-            className="relative bg-gradient-to-br from-white/70 to-emerald-50/60 backdrop-blur-lg border border-emerald-100 rounded-3xl p-6 overflow-hidden shadow-lg cursor-pointer group"
+            className="relative bg-gradient-to-br from-white/70 to-emerald-50/60 backdrop-blur-lg border border-emerald-100 rounded-3xl p-6 overflow-hidden shadow-lg cursor-pointer group hover:text-white transition-all duration-300"
             onClick={() => setSelected(h)}
           >
-         
             <motion.div
               className="absolute inset-0 rounded-3xl border-2 border-transparent bg-gradient-to-r from-emerald-400/50 via-teal-400/30 to-emerald-400/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
               animate={{
@@ -119,39 +148,19 @@ const PatientHistory = () => {
                     strokeLinejoin="round"
                     d="M12 14l9-5-9-5-9 5 9 5z"
                   />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M12 14l6.16-3.422a12.083 12.083 0 01.16 6.275A11.952 11.952 0 0112 20.25a11.952 11.952 0 01-6.32-3.397 12.083 12.083 0 01.16-6.275L12 14z"
-                  />
                 </svg>
               </motion.div>
-
               <div>
-                <h3 className="text-xl font-bold text-emerald-700 tracking-tight">
-                  {h.patientName}
+                <h3 className="text-xl font-bold text-emerald-700 group-hover:text-white transition-colors">
+                  {h.disease}
                 </h3>
-                <p className="text-gray-500 text-sm">{h.doctorName}</p>
+                <p className="text-gray-500 text-sm group-hover:text-gray-100 transition-colors">
+                  {h.doctorName}
+                </p>
               </div>
             </div>
 
-           
-            <div className="relative z-10 mb-3">
-              <span
-                className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                  h.complaint?.toLowerCase().includes("fever")
-                    ? "bg-red-100 text-red-600"
-                    : h.complaint?.toLowerCase().includes("cold")
-                    ? "bg-blue-100 text-blue-600"
-                    : "bg-emerald-100 text-emerald-700"
-                }`}
-              >
-                {h.complaint || "General Checkup"}
-              </span>
-            </div>
-
-            {/* 📅 Date & Time */}
-            <div className="relative z-10 text-gray-600 text-sm space-y-1">
+            <div className="relative z-10 text-gray-600 text-sm space-y-1 group-hover:text-gray-100 transition-colors">
               <p>
                 <strong>Date:</strong> {h.date}
               </p>
@@ -160,30 +169,25 @@ const PatientHistory = () => {
               </p>
             </div>
 
-            {/* ✨ "View Details" Badge */}
-            <motion.div
-              className="absolute bottom-5 right-5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-semibold px-4 py-2 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all duration-300"
-              initial={{ x: 10, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-            >
-              View Details →
+            <motion.div className="absolute bottom-5 right-5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-semibold px-4 py-2 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all duration-300">
+              View Details
             </motion.div>
           </motion.div>
         ))}
       </motion.div>
 
-      {/* 🚫 EMPTY STATE */}
+      {/* Empty State */}
       {filtered.length === 0 && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="text-center mt-32 text-gray-500"
         >
-          <p className="text-xl">No patient history records found 🩺</p>
+          <p className="text-xl">No history found for this patient</p>
         </motion.div>
       )}
 
-      {/* 💊 PRESCRIPTION MODAL */}
+      {/* Modal */}
       {selected && (
         <motion.div
           initial={{ opacity: 0 }}
@@ -197,14 +201,10 @@ const PatientHistory = () => {
             onClick={(e) => e.stopPropagation()}
             className="bg-white/90 backdrop-blur-2xl rounded-3xl p-8 max-w-lg w-full shadow-2xl border border-emerald-100 relative overflow-hidden"
           >
-            {/* Floating gradient ring */}
-            <motion.div
-              className="absolute inset-0 rounded-3xl border-2 border-transparent bg-gradient-to-r from-emerald-400/50 via-teal-400/30 to-emerald-400/50 opacity-70 animate-pulse"
-            ></motion.div>
-
+            <motion.div className="absolute inset-0 rounded-3xl border-2 border-transparent bg-gradient-to-r from-emerald-400/50 via-teal-400/30 to-emerald-400/50 opacity-70 animate-pulse"></motion.div>
             <div className="relative z-10">
               <h2 className="text-3xl font-bold text-emerald-700 mb-3">
-                {selected.patientName} — {selected.complaint}
+                {selected.disease}
               </h2>
               <p className="text-gray-600">
                 <strong>Doctor:</strong> {selected.doctorName}
@@ -212,25 +212,24 @@ const PatientHistory = () => {
               <p className="text-gray-600">
                 <strong>Date:</strong> {selected.date} at {selected.time}
               </p>
-
               <div className="mt-4 bg-emerald-50 p-4 rounded-xl shadow-inner">
                 <h4 className="font-semibold text-emerald-700 mb-2">
                   Prescription:
                 </h4>
-                {Array.isArray(selected.prescription)
-                  ? selected.prescription.map((item, i) => (
+                <ul className="list-disc list-inside">
+                  {Array.isArray(selected.prescription?.list) &&
+                    selected.prescription.list.map((item, i) => (
                       <li key={i} className="text-gray-700 text-sm">
                         {item}
                       </li>
-                    ))
-                  : Object.entries(selected.prescription || {}).map(([k, v]) => (
-                      <p key={k} className="text-gray-700 text-sm">
-                        <strong>{k}:</strong>{" "}
-                        {Array.isArray(v) ? v.join(", ") : v}
-                      </p>
                     ))}
+                </ul>
+                {selected.prescription?.note && (
+                  <p className="text-gray-700 text-sm mt-2 italic">
+                    <strong>Note:</strong> {selected.prescription.note}
+                  </p>
+                )}
               </div>
-
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -248,12 +247,3 @@ const PatientHistory = () => {
 };
 
 export default PatientHistory;
-
-
-
-
-
-
-
-
-

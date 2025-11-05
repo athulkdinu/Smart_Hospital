@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import Layout from '../components/Layout'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faUser, faEnvelope, faPhone, faMapMarkerAlt, faCalendarCheck, faTicketAlt, faClock, faEdit } from '@fortawesome/free-solid-svg-icons'
+import { faUser, faEnvelope, faPhone, faMapMarkerAlt, faCalendarCheck, faTicketAlt, faClock } from '@fortawesome/free-solid-svg-icons'
 import { getPatientById } from '../services/patientApi'
 import { getAllAppointments, getAppointmentsByPatientId } from '../services/appointmentApi'
 import { getAllDoctors } from '../services/doctorApi'
@@ -223,10 +223,6 @@ function Profile() {
                     <div className="font-bold text-emerald-700">{user?.id ?? '—'}</div>
                   </div>
                 </div>
-                <button className="w-full rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-3 font-bold shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
-                  <FontAwesomeIcon icon={faEdit} />
-                  Edit Profile
-                </button>
               </div>
             </motion.div>
 

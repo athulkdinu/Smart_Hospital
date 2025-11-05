@@ -3,7 +3,7 @@ import BASEURL from "./serverURL";
 
 // ✅ Fetch all tokens
 export const getAllTockens = async () =>
-  await commonAPI("GET", `${BASEURL}/tocken`, {});
+  await commonAPI("GET", `${BASEURL}/tokens`, {});
 
 // ✅ Fetch all appointments
 export const getAllAppoinments = async () =>
@@ -16,3 +16,6 @@ export const AddPatientHistory = async (data) =>
 // ✅ Get all patient history
 export const getAllPatientHistory = async () =>
   await commonAPI("GET", `${BASEURL}/patienthistory`, {});
+
+export const getDoctorById = async (id) =>
+  await commonAPI("GET", `${BASEURL}/doctors/${id}`, {});

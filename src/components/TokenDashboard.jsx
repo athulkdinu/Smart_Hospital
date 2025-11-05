@@ -118,6 +118,7 @@ const TokenDashboard = () => {
               <th className="py-3 px-6 text-left font-medium">Patient</th>
               <th className="py-3 px-6 text-left font-medium">Doctor</th>
               <th className="py-3 px-6 text-left font-medium">Date</th>
+              <th className="py-3 px-6 text-left font-medium">Status</th>
               <th className="py-3 px-6 text-left font-medium">Created At</th>
             </tr>
           </thead>
@@ -139,6 +140,19 @@ const TokenDashboard = () => {
                   <td className="py-3 px-6">{token.patientName}</td>
                   <td className="py-3 px-6">{token.doctorName}</td>
                   <td className="py-3 px-6">{token.date}</td>
+                  <td className="py-3 px-6">
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                        (token.status || 'Pending').toLowerCase() === 'completed'
+                          ? 'bg-green-100 text-green-700'
+                          : (token.status || 'Pending').toLowerCase() === 'skipped'
+                          ? 'bg-yellow-100 text-yellow-700'
+                          : 'bg-blue-100 text-blue-700'
+                      }`}
+                    >
+                      {(token.status || 'Pending')}
+                    </span>
+                  </td>
                   <td className="py-3 px-6 text-gray-600">
                     {new Date(token.createdAt).toLocaleString()}
                   </td>

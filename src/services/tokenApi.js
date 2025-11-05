@@ -56,9 +56,15 @@ export const createToken = async (tokenData) => {
     ...tokenData,
     date: today,
     tokenNumber,
+    status: tokenData.status || 'Pending',
     createdAt: new Date().toISOString()
   }
   
   return await commonAPI('POST', `${BASEURL}/tokens`, newToken)
+}
+
+// Update token status
+export const updateToken = async (tokenId, updates) => {
+  return await commonAPI('PATCH', `${BASEURL}/tokens/${tokenId}`, updates)
 }
 
