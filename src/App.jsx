@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import {  Route, Routes, Navigate } from "react-router-dom";
 import Dashboard from './pages/Dashboard'
 import Profile from './pages/Profile'
@@ -13,7 +13,40 @@ import Landing from "./pages/Landing";
 import AdminDashboard from './components/AdminDashboard'
 
 function App() {
-  const user = JSON.parse(localStorage.getItem("user"));
+  const [user, setUser] = useState(() => {
+    try {
+      const storedUser = localStorage.getItem("user");
+      return storedUser ? JSON.parse(storedUser) : null;
+    } catch (error) {
+      console.error("Error parsing user from localStorage:", error);
+      return null;
+    }
+  });
+
+  // Listen for storage changes (when login happens)
+  useEffect(() => {
+    const handleStorageChange = () => {
+      try {
+        const storedUser = localStorage.getItem("user");
+        setUser(storedUser ? JSON.parse(storedUser) : null);
+      } catch (error) {
+        console.error("Error parsing user from localStorage:", error);
+        setUser(null);
+      }
+    };
+
+    // Listen for storage events (when localStorage is updated from another tab/window)
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also check localStorage periodically (for same-tab updates)
+    // Check every 500ms - not too frequent but responsive enough
+    const interval = setInterval(handleStorageChange, 500);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, []);
 
   return (
     <Routes>
