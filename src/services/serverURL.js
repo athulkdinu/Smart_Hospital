@@ -1,3 +1,3 @@
 
-const BASEURL = "https://smarthospital-backend-6.onrender.com"; 
+const BASEURL = "https://smarthospital-backend-7.onrender.com"; 
 export default BASEURL;

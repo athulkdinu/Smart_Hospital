@@ -42,7 +42,12 @@ const Login = () => {
       }, 800);
     } catch (err) {
       console.error("Login failed:", err);
-      setError("Unable to connect to backend. Please try again.");
+      // Show more specific error messages
+      if (err.message && err.message.includes('Unable to connect')) {
+        setError(err.message);
+      } else {
+        setError("Unable to connect to backend. Please check your connection and try again.");
+      }
     }
   };
 
