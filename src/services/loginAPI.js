@@ -21,10 +21,6 @@ export const loginUser = async (loginId, password, role) => {
     return null;
   } catch (err) {
     console.error("Login API Error:", err);
-    // Re-throw network errors with a user-friendly message
-    if (err.message && err.message.includes('Network error')) {
-      throw new Error('Unable to connect to server. Please check if the backend is running and try again.');
-    }
     throw err;
   }
 };

@@ -15,7 +15,17 @@ export const registerPatient = async (patientData) => {
     const loginId = await generatePatientLoginId();
     const newPatient = { ...patientData, loginId };
     const response = await commonAPI("POST", `${BASEURL}/patients`, newPatient);
-    return response;
+    
+    // Ensure we return an object with loginId even if backend response is different
+    if (response && response.loginId) {
+      return response;
+    } else if (response) {
+      // If response exists but doesn't have loginId, add it
+      return { ...response, loginId };
+    } else {
+      // If response is null but no error was thrown, return the newPatient
+      return newPatient;
+    }
   } catch (err) {
     console.error("Registration API Error:", err);
     throw err;
