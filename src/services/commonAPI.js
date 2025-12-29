@@ -10,6 +10,7 @@ const commonAPI = async (method, url, data = {}) => {
         'Content-Type': 'application/json'
       }
     });
+   // cmts
     return response.data;
   } catch (error) {
     console.error('API Error:', {
